@@ -1,52 +1,41 @@
 # Mikhail Kohut
 
-### Full-stack Software Engineer · TypeScript / React / Node.js
+**Full-stack Software Engineer** · TypeScript · React / Next.js · Node.js / NestJS
 
-I build practical developer tools and end-to-end web products — from TypeScript APIs and PostgreSQL systems to local-first AI workflows. I care about reliable architecture, security boundaries, automated testing, and software people can actually use.
+I build full-stack products and open-source developer tools, with an emphasis on dependable APIs, PostgreSQL, security boundaries, testing, and clear engineering trade-offs. Recently I've been working on coding-agent workflows, permission analysis, and data-rich interactive products.
 
-Based in **Ukraine** · Open to **remote engineering opportunities** and **open-source collaboration**.
+Based in Ukraine · Open to remote engineering roles and open-source collaboration.
 
-### Featured projects
+## Selected projects
 
-#### [RuleWitness](https://github.com/vlovers/rulewitness) — semantic AI-agent permission diffs
+| Project | What it does | Status |
+| --- | --- | --- |
+| **[Grid Atlas](https://github.com/vlovers/grid-atlas)** | Source-backed Formula 1 historical encyclopedia with bilingual driver, constructor, circuit, season and race exploration, plus an evidence-based historical network. | Public beta in preparation |
+| **[AI Office](https://github.com/vlovers/ai-office)** | Local-first Codex workspace with two workers, reusable agent profiles, isolated Git worktrees, task streaming, and explicit review / keep / reject workflows. | [v0.5.0 released](https://github.com/vlovers/ai-office/releases/tag/v0.5.0); v0.6.0 implementation integrated, not yet released |
+| **[RuleWitness](https://github.com/vlovers/rulewitness)** | Offline TypeScript CLI that detects modeled permission-decision changes in supported Claude Code rules across Git revisions, with concrete witnesses and policy assertions. | [v0.3.0 on npm](https://www.npmjs.com/package/rulewitness/v/0.3.0) |
+| **[MutationBoundary](https://github.com/vlovers/mutation-boundary)** | PostgreSQL test utility for detecting unexpected committed row changes after failed or supposedly read-only operations. | v0.3.0 release candidate; [npm package](https://www.npmjs.com/package/mutation-boundary) |
+| **[Estima](https://github.com/vlovers/estima)** | Full-stack AI-assisted software estimation with task management, feedback calibration, JWT authentication, migrations and PostgreSQL integration tests. | Active development |
 
-**Released:** [v0.2.0](https://github.com/vlovers/rulewitness/releases/tag/v0.2.0) · [npm](https://www.npmjs.com/package/rulewitness)
+### What makes these projects interesting
 
-Experimental, offline TypeScript CLI and library for reviewing supported Claude Code permission-rule changes across Git revisions. Explains modeled ASK / ALLOW / DENY transitions with concrete witnesses, identifies determining rules, filters modeled no-ops, and supports policy assertions. Does **not** claim to emulate runtime authorization.
+- **AI agent safety and review:** RuleWitness models *configuration-rule* changes, not runtime authorization; AI Office defaults to read-only and requires explicit authorization for isolated write tasks.
+- **Data correctness:** MutationBoundary checks a focused database invariant; Estima exercises migrations and API behavior against PostgreSQL.
+- **Evidence-driven interfaces:** Grid Atlas combines historical F1 datasets with separately reviewed lineage evidence. Its public beta and hosting are still in progress.
 
-`TypeScript` · `Node.js 24` · `CLI` · `Git` · `Security tooling`
+## Tech I work with
 
-#### [AI Office](https://github.com/vlovers/ai-office) — local-first coding-agent workspace
-
-**In development:** v0.3.0
-
-A local workspace for two independently managed Codex agents, with persistent task queues, live streaming events, explicit stop/resume, and a PHOSPHOR OS React dashboard. Current agent execution is **read-only**; isolated code-editing workflows and QA orchestration are future work.
-
-`TypeScript` · `React` · `Fastify` · `SQLite` · `Codex SDK`
-
-#### [Estima](https://github.com/vlovers/estima) — AI-assisted development estimation
-
-**In development**
-
-A full-stack task and estimation application exploring AI estimates, developer feedback and calibration, backed by PostgreSQL and tested API workflows. Current work focuses on reliable clarification persistence, integration testing, and validating the live AI experience.
-
-`React` · `NestJS` · `PostgreSQL` · `TypeORM` · `Docker`
-
-### Technologies
-
-| Area | Stack |
+| Area | Technologies |
 | --- | --- |
-| Frontend | React, Next.js, TypeScript, TanStack Query |
-| Backend | Node.js, NestJS, Fastify, REST, GraphQL |
+| Frontend | TypeScript, React, Next.js, TanStack Query |
+| Backend | Node.js, NestJS, Fastify, REST APIs, GraphQL |
 | Data | PostgreSQL, SQLite, MongoDB, TypeORM |
-| Engineering | Docker, CI/CD, security, automated testing, Git workflows |
+| Tooling | Docker, GitHub Actions, Git, automated tests, Nx |
+| Current interests | Developer experience, AI coding agents, application security, historical-data visualization |
 
-### What I'm focused on
+## Get in touch
 
-- Building trustworthy AI developer workflows with clear permission boundaries.
-- Turning experiments into reproducible, tested open-source tools.
-- Shipping practical full-stack products and documenting engineering trade-offs.
+Interested in **remote full-stack engineering**, open-source collaboration, and building reliable developer tools.
 
-### Connect
+[Explore my repositories](https://github.com/vlovers?tab=repositories) · [RuleWitness on npm](https://www.npmjs.com/package/rulewitness) · [MutationBoundary on npm](https://www.npmjs.com/package/mutation-boundary)
 
-[GitHub](https://github.com/vlovers) · Interested in remote full-stack engineering and open-source collaboration.
+<sub>Project descriptions reflect the documented repository status. Experimental tools have explicit scope and limitations; in-development projects are not presented as production deployments.</sub>

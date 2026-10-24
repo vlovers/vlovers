@@ -99,3 +99,5 @@ A successful Actions observation is eligible for review triage only when it has 
 Attention triage checks evidence types before comparing CI, review, or mergeability observations. Non-string CI/review observations never become review-ready; missing mergeability is still not an authorization to merge and must be checked independently.
 
 Actions lifecycle metadata is validated for consistency: a completed workflow must carry a terminal conclusion, while queued/in-progress/waiting workflows must not already carry one. Contradictory observations fail validation rather than being presented as green or pending evidence.
+
+Exact-head Actions verification requires a valid 40-character hexadecimal target commit SHA before any workflow run is considered. Missing, abbreviated, or malformed target SHAs raise validation errors rather than producing a misleading observation.

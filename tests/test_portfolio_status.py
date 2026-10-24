@@ -49,6 +49,28 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertIn("grid-atlas #272", output.getvalue())
         self.assertIn("estima #15", output.getvalue())
 
+    def test_mergeability_is_observation_not_merge_permission(self):
+        self.assertEqual(
+            portfolio_status.summarize_mergeability({"mergeable": False}),
+            "not mergeable observed (investigate)",
+        )
+        self.assertEqual(
+            portfolio_status.summarize_mergeability({"mergeable": True}),
+            "mergeable observed (not clearance)",
+        )
+        self.assertEqual(
+            portfolio_status.summarize_mergeability({"mergeable": None}),
+            "unknown (GitHub pending)",
+        )
+        self.assertEqual(
+            portfolio_status.summarize_mergeability({}),
+            "unknown (GitHub pending)",
+        )
+        for invalid in ("false", 0, [], {}):
+            with self.subTest(invalid=invalid):
+                with self.assertRaises(ValueError):
+                    portfolio_status.summarize_mergeability({"mergeable": invalid})
+
     def test_pr_metadata_cache_is_scoped_and_reused_for_drift(self):
         sha = "b" * 40
         calls = []

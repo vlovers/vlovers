@@ -358,6 +358,8 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(set(portfolio_status.BRANCH_DRIFT_PRS), expected)
         self.assertEqual(len(portfolio_status.BRANCH_DRIFT_PRS), len(expected))
         self.assertIn(("estima", 15), expected)
+        self.assertIn(("last-chapter", 5), expected)
+        self.assertIn("last-chapter", portfolio_status.REPOSITORIES)
         self.assertIn(("mutation-boundary", 70), expected)
         self.assertNotIn(("grid-atlas", 268), expected)
 

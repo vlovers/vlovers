@@ -1,3 +1,8 @@
+## Grid Atlas #272 failed-job root cause — 2026-10-24
+
+[PR handoff](https://github.com/vlovers/grid-atlas/pull/272#issuecomment-6387213768) and [failed Actions run](https://github.com/vlovers/grid-atlas/actions/runs/40110810456): `Unified archive experience / visual-accessibility` fails `tests/browser/unified-archive.spec.ts:60`. Ukrainian `/constructors` at 200% font size overflows viewport by 184px (Chromium) / 182px (WebKit), versus <=1px required. 2 failed, 22 passed. [Screenshots and traces](https://github.com/vlovers/grid-atlas/actions/runs/40110810456/artifacts/12566881106). Product agent owns the UI reflow fix; preserve accessibility assertion and rerun on new SHA. A mergeable PR with this failed workflow is **not release-ready**.
+
+
 ## Grid Atlas mergeability recheck — 2026-10-24
 
 Fresh GitHub comparison `PR head...main` for #271 and #272 shows **mergeable=true for both** (earlier false observations were transient). #271 reverse comparison: 5 commits ahead / 2 behind, 84 main-side files, **no direct overlap** with its two changed PR files. #272: 4 ahead / 14 behind, 14 main-side files, **no direct overlap** with its 14 changed PR files. These values are reverse-compare metadata and do not imply review approval. #272 retains a historical failed and cancelled Actions run; inspect the failure before merge, even if other runs on the head succeeded. Recheck after any branch update.

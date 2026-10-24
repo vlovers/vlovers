@@ -327,9 +327,9 @@ def classify_pr_attention(record):
     if isinstance(state, str) and state in {"merged", "closed"}:
         return "closed"
     head_sha = record.get("head_sha")
-    if state != "open" or not isinstance(head_sha, str) or not re.fullmatch(
-        r"[0-9a-fA-F]{40}", head_sha
-    ):
+    if not isinstance(state, str) or state != "open" or not isinstance(
+        head_sha, str
+    ) or not re.fullmatch(r"[0-9a-fA-F]{40}", head_sha):
         return "unknown"
     workflow = record.get("workflow_observation")
     review = record.get("review_observation")

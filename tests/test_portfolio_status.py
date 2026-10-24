@@ -107,6 +107,23 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(summarize({"total_count": 1, "workflow_runs": [run(conclusion="skipped")]}, sha),
                          "unknown (non-success conclusion)")
 
+    def test_workflow_observation_rejects_invalid_status_and_conclusion_types(self):
+        sha = "a" * 40
+        summarize = portfolio_status.summarize_workflow_runs
+        for status, conclusion in (
+            (None, "success"),
+            (["completed"], "success"),
+            ("unknown-status", "success"),
+            ("completed", []),
+            ("completed", {"unexpected": True}),
+            ("completed", "unknown-conclusion"),
+        ):
+            with self.subTest(status=status, conclusion=conclusion):
+                with self.assertRaises(ValueError):
+                    summarize({"total_count": 1, "workflow_runs": [
+                        {"head_sha": sha, "status": status, "conclusion": conclusion}
+                    ]}, sha)
+
     def test_foundation_status_uses_exact_head_and_does_not_accept_stale_runs(self):
         sha = "a" * 40
         paths = []

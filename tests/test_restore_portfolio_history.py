@@ -18,10 +18,10 @@ class RestoreHistoryTests(unittest.TestCase):
 
     def test_selects_latest_nonexpired_prior_run(self):
         payload = {"artifacts": [
-            {"id": 1, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-22", "expired": False, "workflow_run": {"id": 10}},
-            {"id": 2, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-23", "expired": False, "workflow_run": {"id": 11}},
-            {"id": 3, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-24", "expired": False, "workflow_run": {"id": 12}},
-            {"id": 4, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-25", "expired": True, "workflow_run": {"id": 13}},
+            {"id": 1, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-22T00:00:00Z", "expired": False, "workflow_run": {"id": 10}},
+            {"id": 2, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-23T00:00:00Z", "expired": False, "workflow_run": {"id": 11}},
+            {"id": 3, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-24T00:00:00Z", "expired": False, "workflow_run": {"id": 12}},
+            {"id": 4, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-25T00:00:00Z", "expired": True, "workflow_run": {"id": 13}},
         ]}
         self.assertEqual(select_previous_artifact(payload, 12)["id"], 2)
 
@@ -80,7 +80,7 @@ class RestoreHistoryTests(unittest.TestCase):
         payload = {"artifacts": [
             {"id": 7, "name": "engineering-portfolio-snapshot", "expired": False},
             {"id": 8, "name": "engineering-portfolio-snapshot", "expired": False,
-             "workflow_run": {"id": 10}, "created_at": "2026-10-24"},
+             "workflow_run": {"id": 10}, "created_at": "2026-10-24T00:00:00Z"},
         ]}
         self.assertEqual(select_previous_artifact(payload, 10), None)
 

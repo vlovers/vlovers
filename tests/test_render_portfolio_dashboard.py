@@ -129,6 +129,16 @@ class DashboardTests(unittest.TestCase):
             dependency_rows([{"repository": ["vlovers/ai-office"],
                               "number": 43, "state": "open"}])
 
+    def test_overlap_rows_reject_malformed_and_duplicate_identities(self):
+        from scripts.render_portfolio_dashboard import overlap_rows
+        with self.assertRaisesRegex(ValueError, "Invalid overlap PR identity"):
+            overlap_rows([{"repository": ["vlovers/mutation-boundary"],
+                           "number": 68, "state": "open"}])
+        item = {"repository": "vlovers/mutation-boundary", "number": 68,
+                "state": "open", "head_sha": "a" * 40}
+        with self.assertRaisesRegex(ValueError, "Duplicate overlap PR"):
+            overlap_rows([item, dict(item, state="merged")])
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

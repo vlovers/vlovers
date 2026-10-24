@@ -301,9 +301,9 @@ class PortfolioStatusTests(unittest.TestCase):
                 portfolio_status.branch_drift_status("ai-office", 43)
 
     def test_branch_divergence_table_fails_closed_on_compare_error(self):
-        with patch.object(portfolio_status, "BRANCH_DRIFT_PRS", (("ai-office", 43),)), \\
+        with patch.object(portfolio_status, "BRANCH_DRIFT_PRS", (("ai-office", 43),)), \
              patch.object(portfolio_status, "branch_drift_status", side_effect=TimeoutError("compare unavailable")):
-            with contextlib.redirect_stdout(io.StringIO()) as output, \\
+            with contextlib.redirect_stdout(io.StringIO()) as output, \
                  contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(portfolio_status.render_branch_drift_queue(), 1)
         self.assertIn("| unknown | unknown | unknown |", output.getvalue())

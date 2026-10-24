@@ -107,6 +107,10 @@ def summarize_workflow_runs(response, expected_sha):
             raise ValueError("Invalid Actions run conclusion")
         if conclusion not in valid_conclusions:
             raise ValueError("Unknown Actions run conclusion")
+        if status == "completed" and conclusion is None:
+            raise ValueError("Completed Actions run missing conclusion")
+        if status != "completed" and conclusion is not None:
+            raise ValueError("Incomplete Actions run has terminal conclusion")
     failed = {"failure", "timed_out", "cancelled", "startup_failure"}
     if any(run.get("conclusion") in failed for run in runs):
         return "failure observed"

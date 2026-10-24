@@ -14,6 +14,18 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 | Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) → [#272](https://github.com/vlovers/grid-atlas/pull/272) | Verify pinned workflows; wait for product owner to resolve browser CI failure | Never weaken accessibility test |
 | Last Chapter | [draft #5](https://github.com/vlovers/last-chapter/pull/5) / [issue #1](https://github.com/vlovers/last-chapter/issues/1) | Verify committed lockfile, `npm ci`, and final-head CI; author decides draft readiness | Product code belongs to game team |
 
+## Live verification — 2026-10-24 (exact PR head observations)
+
+These are observations, **not** merge authorization. Re-check after every push.
+
+| PR | Head SHA prefix | Observed Actions runs | GitHub mergeability | Engineering follow-up |
+| --- | --- | --- | --- | --- |
+| [Grid Atlas #271](https://github.com/vlovers/grid-atlas/pull/271) | `6c93c1c87` | 1 success | false | Resolve branch conflict without changing product code |
+| [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272) | `1c22563d0` | 8 success, 1 failure, 1 cancelled | false | Identify failing check and resolve integration conflict; do not disable browser checks |
+| [Last Chapter #5](https://github.com/vlovers/last-chapter/pull/5) | `d9d79b088` | 1 failure | true | Inspect current failed job; earlier green SHA is superseded |
+
+Other observed PR mergeability (not approval): AI Office #43/#48/#49, RuleWitness #82/#83, MutationBoundary #68/#69/#70 and Estima #13/#14/#15 were reported mergeable by GitHub. Their current exact-head CI has **not** been re-certified in this verification batch.
+
 ## P1 — Dashboard engineering
 
 1. Keep six-repository inventory and 16 tracked PRs accurate (seven foundation, nine follow-up); reconcile closed or superseded PRs without silently removing history.

@@ -39,6 +39,19 @@ class DashboardTests(unittest.TestCase):
                 render(snapshot)
 
 
+
+    def test_known_file_overlap_requires_manual_reconciliation(self):
+        from scripts.render_portfolio_dashboard import overlap_rows
+        rows = overlap_rows([
+            {"repository": "vlovers/mutation-boundary", "number": 68, "state": "open"},
+            {"repository": "vlovers/mutation-boundary", "number": 69, "state": "open"},
+            {"repository": "vlovers/mutation-boundary", "number": 70, "state": "open"},
+        ])
+        self.assertEqual(len(rows), 2)
+        self.assertTrue(any("CONTRIBUTING.md" in row and "manual reconciliation required" in row
+                            for row in rows))
+        self.assertTrue(any("docs/RELEASING.md" in row for row in rows))
+
     def test_dependency_order_is_advisory_and_tracks_merged_predecessor(self):
         from scripts.render_portfolio_dashboard import dependency_rows
         rows = dependency_rows([

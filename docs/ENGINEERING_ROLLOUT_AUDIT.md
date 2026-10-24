@@ -76,11 +76,11 @@ The six baseline PRs were checked against their **current head SHA**, not a prev
 | Foundation PR | Head SHA | Observed Actions |
 | --- | --- | --- |
 | [Grid Atlas #268](https://github.com/vlovers/grid-atlas/pull/268) | `c03c68f96a87` | Merged; Foundation CI success on former PR head |
-| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `87d7f8c1f01d` | AI Office validation success |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `3eb4eaae2b8c` | [AI Office validation #40105333564](https://github.com/vlovers/ai-office/actions/runs/40105333564) success |
 | [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `7ea6357de953` | CI + permissions review success |
-| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `c8b80b62b49` | MutationBoundary checks success |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `d901cc88697a` | [MutationBoundary checks #40105239826](https://github.com/vlovers/mutation-boundary/actions/runs/40105239826) success |
 | [Estima #13](https://github.com/vlovers/estima/pull/13) | `804873ea0b0c` | Bun + PostgreSQL integration success |
-| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | moving head | Previous CI successful; new review-evidence tests require fresh CI on final commit |
+| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | `b0618462e500` (before this audit edit) | [Portfolio report validation #40121960041](https://github.com/vlovers/vlovers/actions/runs/40121960041) success; **rerun required after this documentation commit** |
 
 All five still-open baseline PRs require independent review and maintainer acceptance. A historical success does not apply after a new push.
 
@@ -96,7 +96,7 @@ These are **separate open PRs**, not deployed default-branch changes. CI observa
 
 | Repository | Intake / contributor PR | CI supply-chain PR | Last observed CI state |
 | --- | --- | --- | --- |
-| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | #271 Foundation CI passed. **#272 has 9/9 successful workflows** on head `4aeab9b78c81` after the targeted narrow-viewport `/constructors` fix (previously 7/9) |
+| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | #271 Foundation CI passed. **#272 currently has 8 successful, 1 failed, 1 cancelled workflow** on head `1c22563d0ec0` (Unified archive experience failed; Next.js web cancelled). The earlier 9/9 observation was for a different/historical SHA and must not be treated as current-head evidence. |
 | AI Office | [#48](https://github.com/vlovers/ai-office/pull/48) | [#49](https://github.com/vlovers/ai-office/pull/49) | Both validation runs passed on respective head SHAs |
 | RuleWitness | [#83](https://github.com/vlovers/rulewitness/pull/83) | Existing pinned and read-only CI | CI + permissions review passed on #83 head |
 | MutationBoundary | [#69](https://github.com/vlovers/mutation-boundary/pull/69) | [#70](https://github.com/vlovers/mutation-boundary/pull/70) | #69 and #70 checks passed on respective head SHAs; #70 release guard not deployed |
@@ -244,3 +244,19 @@ Read-only API inspection of repository rulesets, classic branch protection and d
 **Limits:** empty repository-ruleset lists do not exclude classic branch protection, organization-level policy, or other access controls. The integration cannot read classic protection (403). CODEOWNERS absence is based on the canonical `.github/CODEOWNERS` location only; check root `CODEOWNERS` and `docs/CODEOWNERS` before asserting no owners file exists anywhere.
 
 **Owner decision needed before configuration writes:** choose review count (recommend at least one genuinely independent human approval where collaborators exist), stale-review dismissal/last-push approval, required thread resolution, and strict required checks. Validate exact job names from the live workflows before enforcing; an incorrect required check can deadlock all PRs. Preserve Estima's `develop` target. Enable settings only with explicit authorization and sufficient GitHub permissions; do not invent approvals or silently bypass required checks.
+
+## Cross-project exact-head reconciliation — 2026-10-24 (latest governance check)
+
+Rechecked the five still-open foundation PR heads, GitHub Actions runs and submitted reviews. The four source-repository PR descriptions were updated with run URLs; no source commits, merges or releases were made. The portfolio PR's own head will change when this audit is committed, so its previous green run must **not** be attributed to the new SHA.
+
+| PR | Exact observed head | PR-triggered Actions evidence | Independent APPROVED submission |
+| --- | --- | --- | --- |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `d901cc88697a0e3008f866d32b6385f17342d52d` | [checks #40105239826](https://github.com/vlovers/mutation-boundary/actions/runs/40105239826): success | None observed; author COMMENTED |
+| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `7ea6357de953a8cb9e37140dc2b67765f7941b5b` | [CI #40083577783](https://github.com/vlovers/rulewitness/actions/runs/40083577783), [permissions #40083577592](https://github.com/vlovers/rulewitness/actions/runs/40083577592): success | None observed; author COMMENTED |
+| [Estima #13](https://github.com/vlovers/estima/pull/13) | `804873ea0b0c6311cce9dd7e883df1224ac93bfa` | [PostgreSQL #40081427792](https://github.com/vlovers/estima/actions/runs/40081427792), [Bun #40081427815](https://github.com/vlovers/estima/actions/runs/40081427815): success | None observed; author COMMENTED |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `3eb4eaae2b8c7af7e788d1d4feb14602e0d7ea92` | [validation #40105333564](https://github.com/vlovers/ai-office/actions/runs/40105333564): success | None observed; author COMMENTED |
+| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | `b0618462e500a0b116e5c6f30940c611ced83ced` (pre-edit) | [validation #40121960041](https://github.com/vlovers/vlovers/actions/runs/40121960041): success on **pre-edit head** | None observed |
+
+**Grid Atlas #272 separate blocker:** on `1c22563d0ec0de332e5bfd2082e74f6108cf3350`, [Unified archive experience #40110810456](https://github.com/vlovers/grid-atlas/actions/runs/40110810456) failed and [Next.js web #40110810392](https://github.com/vlovers/grid-atlas/actions/runs/40110810392) was cancelled. Do not report this PR as 9/9 green, even if another branch or an earlier SHA had a clean run. Keep the browser accessibility gate intact and coordinate with the product owner.
+
+**Merge gate:** these observations do not establish reviewer independence, enforced required checks, absence of conflicts, or permission to merge. All five still-open foundation PRs await independent acceptance and maintainer authorization. The portfolio docs edit requires a fresh CI result on its resulting head.

@@ -1,3 +1,13 @@
+## File-overlap audit — 2026-10-24
+
+Audited complete changed-file lists for AI Office #43/#48/#49, RuleWitness #82/#83, MutationBoundary #68/#69/#70, Estima #13/#14/#15 and Grid Atlas #271/#272.
+
+- **MutationBoundary:** #68 ↔ #69 overlap on `CONTRIBUTING.md`; #68 ↔ #70 overlap on `README.md` and `docs/RELEASING.md`. Integrate #68 first, then rebase/reconcile #69 and #70; preserve the v0.6.0 release history and reconcile stale v0.4.0 wording in #70. No blind conflict resolution.
+- **AI Office, RuleWitness, Estima, Grid Atlas:** no direct changed-file overlaps among the audited PRs. This is **not** a semantic compatibility or merge-readiness guarantee.
+- **Grid Atlas #271/#272:** both GitHub mergeability observations were false; investigate branch drift even though the changed-file sets do not overlap.
+- Re-run this audit if any PR head changes.
+
+
 # Engineering work queue
 
 Updated 2026-10-24. This is a **coordination backlog**, not product implementation or authorization to merge. Review links are the source of truth; CI evidence is exact-commit only.

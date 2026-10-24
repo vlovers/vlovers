@@ -2,6 +2,7 @@
 """Read-only public GitHub portfolio status; no third-party packages required."""
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -343,6 +344,27 @@ def classify_pr_attention(record):
 
 
 
+
+def pr_age_days(updated_at, now=None):
+    """Elapsed whole UTC days since last PR activity, not time awaiting review."""
+    if not isinstance(updated_at, str):
+        raise ValueError("Missing PR updated_at")
+    try:
+        stamp = datetime.datetime.fromisoformat(updated_at.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError("Invalid PR updated_at") from exc
+    if stamp.tzinfo is None:
+        raise ValueError("PR updated_at must have timezone")
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    if now.tzinfo is None:
+        raise ValueError("Current time must have timezone")
+    elapsed = (now - stamp).total_seconds()
+    if elapsed < 0:
+        raise ValueError("PR updated_at is in the future")
+    return int(elapsed // 86400)
+
+
+
 def build_snapshot():
     """Machine-readable observations; errors stay explicit and fail the CLI."""
     snapshot = {"schema_version": 1, "owner": OWNER, "repositories": [], "tracked_prs": [], "errors": []}
@@ -380,9 +402,11 @@ def build_snapshot():
         record = {"repository": f"{OWNER}/{name}", "number": number,
                   "lane": lane[0] if lane else "foundation", "state": None,
                   "head_sha": None, "workflow_observation": None,
-                  "review_observation": None, "mergeability_observation": None}
+                  "review_observation": None, "mergeability_observation": None,
+                  "days_since_update": None}
         try:
             state, sha, workflow, review, mergeability = foundation_pr_status(name, number, cache)
+            record["days_since_update"] = pr_age_days(cache[(name, number)]["updated_at"])
             record.update(state=state, head_sha=sha, workflow_observation=workflow,
                           review_observation=review, mergeability_observation=mergeability)
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,

@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -29,6 +30,24 @@ FOUNDATION_PRS = (
 
 # Separate review lanes: intake and CI/supply-chain changes remain unmerged until
 # their own review and required checks. Tracking a PR is not an authorization.
+SHA_PATTERN = re.compile(r"[0-9a-fA-F]{40}\\Z")
+
+
+def validate_sha(value):
+    if not isinstance(value, str) or not SHA_PATTERN.fullmatch(value):
+        raise ValueError("Invalid Git commit SHA")
+    return value
+
+
+def safe_markdown_cell(value):
+    """Fail closed on malformed metadata and escape Markdown table delimiters."""
+    if not isinstance(value, str) or not value or len(value) > 255:
+        raise ValueError("Invalid GitHub text metadata")
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise ValueError("Control character in GitHub metadata")
+    return value.replace("|", "\\|")
+
+
 FOLLOWUP_PRS = (
     ("grid-atlas", 271, "issue intake"),
     ("grid-atlas", 272, "CI security"),
@@ -63,7 +82,7 @@ def summarize_workflow_runs(response, expected_sha):
         raise ValueError("Malformed Actions response")
     runs = response.get("workflow_runs")
     total = response.get("total_count")
-    if not isinstance(runs, list) or not isinstance(total, int) or total < len(runs):
+    if not isinstance(runs, list) or type(total) is not int or total < len(runs):
         raise ValueError("Malformed Actions pagination metadata")
     if total > len(runs):
         return "unknown (incomplete Actions pagination)"
@@ -88,11 +107,14 @@ def summarize_review_evidence(reviews, expected_sha, author_login):
         raise ValueError("Incomplete PR review metadata")
     latest_decisive = {}
     for review in reviews:
-        user = review.get("user") or {}
+        if not isinstance(review, dict) or not isinstance(review.get("user"), dict):
+            raise ValueError("Malformed review identity")
+        user = review["user"]
         login = user.get("login")
-        if not login:
-            raise ValueError("Review without reviewer identity")
-        if login.lower() == author_login.lower() or user.get("type") == "Bot":
+        kind = user.get("type")
+        if not isinstance(login, str) or not login or kind not in {"User", "Bot", "Organization", "Mannequin"}:
+            raise ValueError("Incomplete review identity or account type")
+        if login.lower() == author_login.lower() or kind != "User":
             continue
         if review.get("state") in {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}:
             # GitHub's PR reviews endpoint lists reviews chronologically.
@@ -125,9 +147,7 @@ def fetch_pr_reviews(repo, number):
 def foundation_pr_status(name, number):
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
     pr = request(f"/repos/{repo}/pulls/{number}")
-    sha = pr["head"]["sha"]
-    if len(sha) != 40 or any(char not in "0123456789abcdef" for char in sha.lower()):
-        raise ValueError("Invalid PR head SHA")
+    sha = validate_sha(pr["head"]["sha"])
     state = "merged" if pr.get("merged_at") else pr["state"]
     if state not in {"open", "closed", "merged"}:
         raise ValueError("Unexpected PR state")
@@ -187,12 +207,8 @@ def branch_drift_status(name, number):
     """Compare PR HEAD against the *live named base ref*, not PR base.sha."""
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
     pr = request(f"/repos/{repo}/pulls/{number}")
-    head = pr["head"]["sha"]
+    head = validate_sha(pr["head"]["sha"])
     base = pr["base"]["ref"]
-    if not isinstance(head, str) or len(head) != 40 or any(
-        char not in "0123456789abcdef" for char in head.lower()
-    ):
-        raise ValueError("Invalid PR head SHA for compare")
     if not isinstance(base, str) or not base or "/" in base or any(
         char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-" for char in base
     ):
@@ -247,14 +263,16 @@ def main():
         try:
             metadata = request(f"/repos/{owner_repo}")
             branch = metadata["default_branch"]
+            if not isinstance(branch, str) or not branch or len(branch) > 255 or any(ord(char) < 32 or ord(char) == 127 for char in branch):
+                raise ValueError("Invalid default branch name")
             commit = request(f"/repos/{owner_repo}/commits/{urllib.parse.quote(branch, safe='')}")
-            head_sha = commit["sha"]
+            head_sha = validate_sha(commit["sha"])
             head = f"[{head_sha[:10]}](https://github.com/{OWNER}/{name}/commit/{head_sha})"
             # GitHub's issues endpoint also lists PRs; never count those as issues.
             issue_count = count_open_items(owner_repo, "issues", exclude_pull_requests=True)
             pr_count = count_open_items(owner_repo, "pulls")
             try:
-                release = request(f"/repos/{owner_repo}/releases/latest").get("tag_name", "unknown")
+                release = safe_markdown_cell(request(f"/repos/{owner_repo}/releases/latest")["tag_name"])
             except urllib.error.HTTPError as exc:
                 if exc.code != 404:
                     raise

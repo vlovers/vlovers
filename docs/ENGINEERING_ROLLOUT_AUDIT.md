@@ -69,17 +69,32 @@ Before closing or deleting anything: inspect last code changes, linked PRs, acce
 
 **No new product features until P0 and critical P1 workflow foundations are accepted.** Risky data/security issues can still be addressed as incident fixes, separately from feature work.
 
+## Foundation PR exact-head verification — 2026-10-24
+
+The six baseline PRs were checked against their **current head SHA**, not a previous commit. This is observed PR Actions evidence only; it is **not** independent review, branch-rule enforcement, acceptance or merge authorization.
+
+| Foundation PR | Head SHA | Observed Actions |
+| --- | --- | --- |
+| [Grid Atlas #268](https://github.com/vlovers/grid-atlas/pull/268) | `c03c68f96a87` | Merged; Foundation CI success on former PR head |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `304f0e9b86e8` | AI Office validation success |
+| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `124e45efd403` | CI + permissions review success |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `ca8783f92896` | MutationBoundary checks success |
+| [Estima #13](https://github.com/vlovers/estima/pull/13) | `d02560c79215` | Bun + PostgreSQL integration success |
+| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | moving head | CI was successful before the new exact-SHA dashboard work; recheck on final commit |
+
+All five still-open baseline PRs require independent review and maintainer acceptance. A historical success does not apply after a new push.
+
 ## Intake and CI hardening queue — verified 2026-10-24
 
-These are **separate proposed PRs**, not deployed default-branch changes. Keep acceptance and release states distinct.
+These are **separate open PRs**, not deployed default-branch changes. CI observations were rechecked 2026-10-24; refresh before relying on them. Keep acceptance and release states distinct.
 
 | Repository | Intake / contributor PR | CI supply-chain PR | Last observed CI state |
 | --- | --- | --- | --- |
-| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | Both Foundation CI passed |
-| AI Office | [#48](https://github.com/vlovers/ai-office/pull/48) | [#49](https://github.com/vlovers/ai-office/pull/49) | Validation still running at last poll |
-| RuleWitness | [#83](https://github.com/vlovers/rulewitness/pull/83) | Existing pinned and read-only CI | Both workflows passed |
-| MutationBoundary | [#69](https://github.com/vlovers/mutation-boundary/pull/69) | Existing pinned and read-only CI | Checks passed |
-| Estima | [#14](https://github.com/vlovers/estima/pull/14) | Workflow/permissions audit pending | PostgreSQL + Bun workflows passed |
+| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | #271 Foundation CI passed. **#272 has 7/9 successful workflows, 2 failed** (Next.js web + Unified archive; narrow viewport `/constructors` overflow) |
+| AI Office | [#48](https://github.com/vlovers/ai-office/pull/48) | [#49](https://github.com/vlovers/ai-office/pull/49) | Both validation runs passed on respective head SHAs |
+| RuleWitness | [#83](https://github.com/vlovers/rulewitness/pull/83) | Existing pinned and read-only CI | CI + permissions review passed on #83 head |
+| MutationBoundary | [#69](https://github.com/vlovers/mutation-boundary/pull/69) | [#70](https://github.com/vlovers/mutation-boundary/pull/70) | #69 and #70 checks passed on respective head SHAs; #70 release guard not deployed |
+| Estima | [#14](https://github.com/vlovers/estima/pull/14) | [#15](https://github.com/vlovers/estima/pull/15) | PostgreSQL + Bun workflows passed on both heads; CI hardening not merged |
 
 **Integration rule:** before opening another broad standardization PR, finish the existing queue or document a verified blocker. The PR author cannot self-certify independence simply by running another prompt. Confirm real repository rulesets and approvals through GitHub settings or an authorized reviewer; current GitHub connector does not expose branch protection settings. For AI Office, check whether PR branches diverged since last verified run, and do not apply stale green CI to a new SHA.
 

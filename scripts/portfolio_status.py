@@ -342,12 +342,17 @@ def classify_pr_attention(record):
         r"[1-9][0-9]*/[1-9][0-9]* observed success", workflow
     ):
         return "unknown"
-    if review == "no head-SHA non-author approval observed" or (
-        isinstance(review, str) and review.startswith("historical approvals only")
-    ):
+    if review in {
+        "no head-SHA non-author approval observed",
+        "historical approvals only (not head-SHA)",
+    }:
         return "review_needed"
-    if isinstance(review, str) and review.endswith(" head-SHA non-author approval(s) observed (not acceptance)") and review.split(" ", 1)[0].isdigit() and int(review.split(" ", 1)[0]) > 0:
-        return "review_observed_not_authorized"
+    if isinstance(review, str):
+        prefix, separator, suffix = review.partition(" ")
+        if (separator and prefix.isascii() and prefix.isdecimal()
+                and prefix.isdigit() and int(prefix) > 0
+                and suffix == "head-SHA non-author approval(s) observed (not acceptance)"):
+            return "review_observed_not_authorized"
     return "unknown"
 
 

@@ -81,6 +81,9 @@ def overlap_rows(prs):
             status = "re-audit against new base"
         elif not isinstance(a.get("head_sha"), str) or not isinstance(b.get("head_sha"), str):
             status = "unknown (head SHA unavailable)"
+        elif any(len(sha) != 40 or any(char not in "0123456789abcdefABCDEF" for char in sha)
+                 for sha in (a["head_sha"], b["head_sha"])):
+            status = "unknown (invalid head SHA)"
         elif a["head_sha"] != audited_first or b["head_sha"] != audited_second:
             status = "stale audit (PR head changed; re-audit files)"
         else:

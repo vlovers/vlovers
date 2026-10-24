@@ -43,6 +43,17 @@ class RestoreHistoryTests(unittest.TestCase):
         ]}
         self.assertEqual(select_previous_artifact(payload, 10), None)
 
+    def test_rejects_nonobject_artifact_entries(self):
+        with self.assertRaises(ValueError):
+            select_previous_artifact({"artifacts": [None]}, 12)
+
+    def test_rejects_boolean_artifact_id(self):
+        payload = {"artifacts": [
+            {"id": True, "name": "engineering-portfolio-snapshot",
+             "expired": False, "workflow_run": {"id": 11}},
+        ]}
+        self.assertIsNone(select_previous_artifact(payload, 12))
+
     def test_rejects_invalid_utc_timestamp(self):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:

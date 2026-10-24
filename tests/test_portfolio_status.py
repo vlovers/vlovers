@@ -77,6 +77,14 @@ class PortfolioStatusTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 summarize(payload(status, conclusion), sha)
 
+    def test_actions_expected_sha_must_be_full_hex(self):
+        summarize = portfolio_status.summarize_workflow_runs
+        response = {"total_count": 1, "workflow_runs": [
+            {"head_sha": "a" * 40, "status": "completed", "conclusion": "success"}]}
+        for invalid in (None, "", "abc", "z" * 40, [], {}):
+            with self.assertRaisesRegex(ValueError, "expected Actions head SHA"):
+                summarize(response, invalid)
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

@@ -15,6 +15,8 @@ This is a **dated planning snapshot**, not live CI or release certification. Use
 
 **Excluded by request:** Frostline. The separate RuleWitness consumer-E2E repository is treated as a verification fixture, not another product.
 
+**Workstream ownership:** the portfolio coordinator handles repository governance, review/CI evidence, issue triage and agent handoffs only. Product content, UI, narrative, gameplay and feature defects are assigned to the relevant product delivery workstream; they are not implemented or independently filed by governance without an explicit request. See [operational ownership and Last Chapter acceptance](ENGINEERING_ROLLOUT_AUDIT.md#operational-ownership-and-last-chapter-onboarding--2026-10-24).
+
 ## Issue triage — prioritized
 
 | Priority | Repository | Existing issue/PR | Required action before closing |

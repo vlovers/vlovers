@@ -184,13 +184,12 @@ def render_pr_queue(title, entries, show_lane=False):
     return errors
 
 
-# A small targeted drift queue: these AI Office documentation/security PRs were
-# based on older main commits. Do not use the PR's base.sha as the current base
-# tip: it may describe the historical merge base rather than today's main.
-BRANCH_DRIFT_PRS = (
-    ("ai-office", 43),
-    ("ai-office", 48),
-    ("ai-office", 49),
+# Monitor every tracked, unmerged engineering PR against its live target.
+# Do not use PR base.sha as today's target tip: it can be a historical ancestor.
+BRANCH_DRIFT_PRS = tuple(
+    (name, number)
+    for name, number, *_ in (*FOUNDATION_PRS, *FOLLOWUP_PRS)
+    if (name, number) != ("grid-atlas", 268)
 )
 
 
@@ -228,7 +227,7 @@ def branch_drift_status(name, number):
 def render_branch_drift_queue():
     """Report integration risk without interpreting divergence as a merge conflict."""
     errors = 0
-    print("\n## AI Office branch freshness — live base ref (not merge clearance)")
+    print("\n## Engineering PR branch freshness — live base ref (not merge clearance)")
     print("| PR | Head SHA | Base branch | Commit divergence |")
     print("| --- | --- | --- | --- |")
     for name, number in BRANCH_DRIFT_PRS:

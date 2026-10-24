@@ -56,6 +56,21 @@ class DashboardTests(unittest.TestCase):
                 dependency_rows([{"repository": "vlovers/ai-office",
                                   "number": 43, "state": invalid}])
 
+    def test_overlap_audit_requires_open_pair_and_valid_identity(self):
+        from scripts.render_portfolio_dashboard import overlap_rows, dependency_rows
+        first = {"repository": "vlovers/mutation-boundary", "number": 68,
+                 "state": "open", "head_sha": "d901cc88697a0e3008f866d32b6385f17342d52d"}
+        second = {"repository": "vlovers/mutation-boundary", "number": 69,
+                  "state": "open", "head_sha": "8b830e3fe622d52bf4d3bdc47803d526c8b95e99"}
+        self.assertIn("manual reconciliation required", overlap_rows([first, second])[0])
+        self.assertIn("closed PR in pair", overlap_rows([first, dict(second, state="closed")])[0])
+        self.assertIn("unknown (PR state", overlap_rows([first, dict(second, state=None)])[0])
+        for invalid in (0, -1):
+            with self.assertRaises(ValueError):
+                overlap_rows([dict(first, number=invalid)])
+            with self.assertRaises(ValueError):
+                dependency_rows([dict(first, number=invalid)])
+
     def test_known_file_overlap_requires_manual_reconciliation(self):
         from scripts.render_portfolio_dashboard import overlap_rows
         rows = overlap_rows([

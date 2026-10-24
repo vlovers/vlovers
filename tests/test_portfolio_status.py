@@ -70,10 +70,33 @@ class PortfolioStatusTests(unittest.TestCase):
                 with patch.object(portfolio_status, "request", return_value=bad):
                     with self.assertRaises(ValueError):
                         portfolio_status.count_open_items("vlovers/estima", "issues")
-        with patch.object(portfolio_status, "request", return_value=[{"number": i + 1} for i in range(100)]) as fetch:
+        def unbounded_pages(path):
+            page = int(path.rsplit("page=", 1)[1])
+            return [{"number": (page - 1) * 100 + i + 1} for i in range(100)]
+        with patch.object(portfolio_status, "request", side_effect=unbounded_pages) as fetch:
             with self.assertRaisesRegex(ValueError, "pagination exceeded"):
                 portfolio_status.count_open_items("vlovers/estima", "pulls")
         self.assertEqual(fetch.call_count, 20)
+
+    def test_listing_pagination_rejects_duplicate_ids_across_pages(self):
+        def duplicate_page(path):
+            if path.endswith("page=1"):
+                return [{"number": i + 1} for i in range(100)]
+            return [{"number": 100}, {"number": 101}]
+        with patch.object(portfolio_status, "request", side_effect=duplicate_page):
+            with self.assertRaisesRegex(ValueError, "Duplicate issues item"):
+                portfolio_status.count_open_items("vlovers/estima", "issues")
+
+    def test_listing_rejects_oversized_pages_and_invalid_pull_request_markers(self):
+        for items in (
+            [{"number": i + 1} for i in range(101)],
+            [{"number": 1, "pull_request": None}],
+            [{"number": 1, "pull_request": "not an object"}],
+        ):
+            with self.subTest(items=items[:2]):
+                with patch.object(portfolio_status, "request", return_value=items):
+                    with self.assertRaisesRegex(ValueError, "Malformed issues listing"):
+                        portfolio_status.count_open_items("vlovers/estima", "issues", True)
 
     def test_fails_closed_on_api_errors(self):
         def fail(_path):

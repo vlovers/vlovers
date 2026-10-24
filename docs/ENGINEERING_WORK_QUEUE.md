@@ -1,3 +1,11 @@
+### Current actionable CI handoffs — 2026-10-24
+
+- **Last Chapter [draft #5](https://github.com/vlovers/last-chapter/pull/5)**, exact head `5da99d29cf5e7a8edf08d71cc1f80ed462dfb56b`: **both CI and formatting failed**. Workflow runs `40121506764` (`quality / Format`) and `40121506755` (`normalize / Run npm run format`) both report Prettier parser error at `public/phaser-prototype/scene.js:207:25`, literal `\\n` sequences in the `onUpdate` JavaScript block. Agent handoff: [comment](https://github.com/vlovers/last-chapter/pull/5#issuecomment-6388030796). Fix source syntax in the product lane and recheck new exact head; no governance-side product edits.
+- **Grid Atlas [#272](https://github.com/vlovers/grid-atlas/pull/272)**, exact head `1c22563d0ec0de332e5bfd2082e74f6108cf3350`: `Unified archive experience` failed; earlier diagnosis points to Ukrainian constructors at 200% text zoom causing horizontal overflow. Other observed workflows succeeded, with one cancelled. Existing product-agent handoff remains relevant; do not misreport the PR as CI-green.
+- **AI Office [#49](https://github.com/vlovers/ai-office/pull/49)**, exact head `36f01c4bd879e4584634b4df827481d40df49d13`: observed validation success; follow integration sequence #43 → #48 → #49 and review independently.
+- **MutationBoundary [#70](https://github.com/vlovers/mutation-boundary/pull/70)**, exact head `4e67f8b95c539145dd5516fafdfd2d250f43d9f8`: observed checks success; known overlaps with foundation #68 still require reconciliation.
+- **Central portfolio [#2](https://github.com/vlovers/vlovers/pull/2)**, exact head `59e15f814f84a183161eb64521fd50e9faf3df36` at this check: Portfolio report validation succeeded following corrected UTC timestamp fixtures. This observation becomes stale on subsequent commits.
+
 # Engineering work queue
 
 Updated 2026-10-24. This is a **coordination backlog**, not product implementation or authorization to merge. Review links are the source of truth; CI evidence is exact-commit only.

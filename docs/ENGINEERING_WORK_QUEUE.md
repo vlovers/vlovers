@@ -1,3 +1,8 @@
+## Grid Atlas mergeability recheck — 2026-10-24
+
+Fresh GitHub comparison `PR head...main` for #271 and #272 shows **mergeable=true for both** (earlier false observations were transient). #271 reverse comparison: 5 commits ahead / 2 behind, 84 main-side files, **no direct overlap** with its two changed PR files. #272: 4 ahead / 14 behind, 14 main-side files, **no direct overlap** with its 14 changed PR files. These values are reverse-compare metadata and do not imply review approval. #272 retains a historical failed and cancelled Actions run; inspect the failure before merge, even if other runs on the head succeeded. Recheck after any branch update.
+
+
 ## AI Office base-drift recheck — 2026-10-24
 
 Fresh GitHub compare `PR head...main` plus complete PR changed-file lists:

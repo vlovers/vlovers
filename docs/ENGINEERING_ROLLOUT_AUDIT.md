@@ -80,9 +80,15 @@ The six baseline PRs were checked against their **current head SHA**, not a prev
 | [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `124e45efd403` | CI + permissions review success |
 | [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `ca8783f92896` | MutationBoundary checks success |
 | [Estima #13](https://github.com/vlovers/estima/pull/13) | `d02560c79215` | Bun + PostgreSQL integration success |
-| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | moving head | CI was successful before the new exact-SHA dashboard work; recheck on final commit |
+| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | moving head | Previous CI successful; new review-evidence tests require fresh CI on final commit |
 
 All five still-open baseline PRs require independent review and maintainer acceptance. A historical success does not apply after a new push.
+
+## Independent-review gate — observed 2026-10-24
+
+The five open foundation PRs [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68), [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82), [Estima #13](https://github.com/vlovers/estima/pull/13), [AI Office #43](https://github.com/vlovers/ai-office/pull/43) and [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) have successful observed PR Actions on the SHAs checked. **No independent approval was confirmed**: the first four have only author-account COMMENTED technical assessments in the reviewed submissions, and Portfolio #2 had no review submissions. The AI Office review comments also flag possible branch divergence; current GitHub PR metadata reports `mergeable=true`, but that alone cannot resolve the reviewer-requested branch integration and sandbox acceptance. A fresh review of the final diff, branch rules and latest CI SHA is still required. Do not merge based on this audit.
+
+The portfolio report now exposes read-only review observations separately from Actions evidence. It rejects incomplete review pagination, ignores author and bot approvals, treats historical/dismissed approvals as insufficient, and reports outstanding change requests. **Even a current-head approval from another account is not certification of independence or branch-rule compliance.** Do not infer maintainer acceptance or merge authorization from this table or script.
 
 ## Intake and CI hardening queue — verified 2026-10-24
 
@@ -90,7 +96,7 @@ These are **separate open PRs**, not deployed default-branch changes. CI observa
 
 | Repository | Intake / contributor PR | CI supply-chain PR | Last observed CI state |
 | --- | --- | --- | --- |
-| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | #271 Foundation CI passed. **#272 has 7/9 successful workflows, 2 failed** (Next.js web + Unified archive; narrow viewport `/constructors` overflow) |
+| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | #271 Foundation CI passed. **#272 has 9/9 successful workflows** on head `4aeab9b78c81` after the targeted narrow-viewport `/constructors` fix (previously 7/9) |
 | AI Office | [#48](https://github.com/vlovers/ai-office/pull/48) | [#49](https://github.com/vlovers/ai-office/pull/49) | Both validation runs passed on respective head SHAs |
 | RuleWitness | [#83](https://github.com/vlovers/rulewitness/pull/83) | Existing pinned and read-only CI | CI + permissions review passed on #83 head |
 | MutationBoundary | [#69](https://github.com/vlovers/mutation-boundary/pull/69) | [#70](https://github.com/vlovers/mutation-boundary/pull/70) | #69 and #70 checks passed on respective head SHAs; #70 release guard not deployed |

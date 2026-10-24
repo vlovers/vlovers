@@ -1,3 +1,16 @@
+## AI Office base-drift recheck — 2026-10-24
+
+Fresh GitHub compare `PR head...main` plus complete PR changed-file lists:
+
+| PR | Current mergeable | Main-side commits ahead of PR head | PR-head commits behind main comparison | File overlap with main-side compare |
+| --- | --- | --- | --- | --- |
+| #43 | true | 22 | 16 | none observed (89 main-side files) |
+| #48 | true | 19 | 12 | none observed (82 main-side files) |
+| #49 | true | 2 | 19 | none observed (7 main-side files) |
+
+The ahead/behind values describe the **specific reverse comparison**, not an assertion that a PR is clean or review-approved. The earlier `mergeable=false` readings were transient. Continue #43 → #48 → #49 and validate the actual updated merge heads; no automatic merge.
+
+
 ## Coordination handoffs — 2026-10-24
 
 - [Grid Atlas #271 integration handoff](https://github.com/vlovers/grid-atlas/pull/271#issuecomment-6387124226): investigate current `mergeable=false`, update branch safely, validate updated SHA; do not alter product code.

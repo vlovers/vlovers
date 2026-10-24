@@ -30,7 +30,7 @@ def summarize(snapshot, observed_at):
         identities.add(identity)
         attention = pr["attention"]
         if attention not in {
-            "ci_failure", "changes_requested", "integration_blocker", "ci_pending",
+            "ci_failure", "action_required", "changes_requested", "integration_blocker", "ci_pending",
             "review_needed", "review_observed_not_authorized", "unknown", "closed"
         }:
             raise ValueError("Unexpected attention category")

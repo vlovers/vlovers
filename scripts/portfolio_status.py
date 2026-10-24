@@ -334,15 +334,15 @@ def classify_pr_attention(record):
     workflow = record.get("workflow_observation")
     review = record.get("review_observation")
     mergeability = record.get("mergeability_observation")
-    if workflow == "failure observed":
+    if isinstance(workflow, str) and workflow == "failure observed":
         return "ci_failure"
-    if workflow == "action required observed":
+    if isinstance(workflow, str) and workflow == "action required observed":
         return "action_required"
-    if review == "changes requested observed (not cleared)":
+    if isinstance(review, str) and review == "changes requested observed (not cleared)":
         return "changes_requested"
-    if mergeability == "not mergeable observed (investigate)":
+    if isinstance(mergeability, str) and mergeability == "not mergeable observed (investigate)":
         return "integration_blocker"
-    if workflow == "pending":
+    if isinstance(workflow, str) and workflow == "pending":
         return "ci_pending"
     # GitHub may report mergeable=true while checks are absent or incomplete.
     # Never promote missing evidence into a review-ready signal.

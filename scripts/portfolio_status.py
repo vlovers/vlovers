@@ -324,7 +324,7 @@ def classify_pr_attention(record):
     if not isinstance(record, dict):
         return "unknown"
     state = record.get("state")
-    if state in {"merged", "closed"}:
+    if isinstance(state, str) and state in {"merged", "closed"}:
         return "closed"
     head_sha = record.get("head_sha")
     if state != "open" or not isinstance(head_sha, str) or not re.fullmatch(
@@ -346,9 +346,10 @@ def classify_pr_attention(record):
         return "ci_pending"
     # GitHub may report mergeable=true while checks are absent or incomplete.
     # Never promote missing evidence into a review-ready signal.
-    if not isinstance(workflow, str) or not re.fullmatch(
-        r"[1-9][0-9]*/[1-9][0-9]* observed success", workflow
-    ):
+    if not isinstance(workflow, str):
+        return "unknown"
+    success_match = re.fullmatch(r"([1-9][0-9]*)/([1-9][0-9]*) observed success", workflow)
+    if success_match is None or success_match.group(1) != success_match.group(2):
         return "unknown"
     if not isinstance(review, str):
         return "unknown"

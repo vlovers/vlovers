@@ -41,6 +41,6 @@ python3 scripts/portfolio_status.py
 GITHUB_TOKEN=... python3 scripts/portfolio_status.py
 ```
 
-The script performs read-only GitHub API requests and prints current open PR/issue counts, recent open PR names and latest release tag **where available**. It does not certify CI or user-facing feature completeness, mutate GitHub objects, close issues, merge PRs, or publish packages.
+The script performs read-only GitHub API requests and prints current open PR/issue counts and latest GitHub release tag **where available**. It does not certify CI or user-facing feature completeness, mutate GitHub objects, close issues, merge PRs, or publish packages.
 
 At each iteration: read fresh status, revisit issue criteria, choose one cohesive feature outcome per active project, and retain dated decisions or blockers. Do not manually edit counts without verifying them.

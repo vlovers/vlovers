@@ -165,3 +165,22 @@ The PR patch changes only four files: `.github/workflows/validation.yml`, `packa
 
 **Next safe action:** review the current main versions of the two overlapping files and resolve any actual conflicts in the existing #49 branch, preserving immutable action SHAs, `persist-credentials: false`, and the current main validation jobs. Then rerun CI on the resulting head and obtain independent review. Do not force-push, auto-merge, or infer that a passing pre-integration workflow certifies the future merged result.
 
+
+
+## Integration checkpoint after conflict resolution — 2026-10-24
+
+This checkpoint supersedes **earlier dated mergeability observations** above; the historical SHA tables remain for audit traceability, not current status. Read-only GitHub PR metadata and exact-head Actions runs were checked again.
+
+| Repository / PR | Verified head | Exact-head Actions | GitHub mergeability |
+| --- | --- | --- | --- |
+| [AI Office #49](https://github.com/vlovers/ai-office/pull/49) | `36f01c4bd879` | 1/1 completed success | `true` |
+| [Grid Atlas #271](https://github.com/vlovers/grid-atlas/pull/271) | `6c93c1c87219` | 1/1 completed success | `true` |
+| [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272) | `17b5f56ff0a` | 9/9 completed success | `true` |
+
+AI Office #49 previously had a **confirmed `package.json` textual conflict** against `main` (GitHub conflict editor), not merely commit divergence. The conflict was resolved in its PR branch, and the resulting head was inspected for the full `check` chain (workflow pin checks, workflow tests, security lint, typecheck, tests, smoke, build), matching `package-lock.json` dev dependencies, security lint in CI, and immutable Actions checks. The subsequent exact-head Actions run completed successfully. This does **not** establish independent review or authorize merging.
+
+The remaining infrastructure queue was rechecked for GitHub mergeability: AI Office #43/#48, RuleWitness #82/#83, MutationBoundary #68/#69/#70, and Estima #13/#14/#15 all returned `true` while still open. A transient `mergeable=true` observation is not a repository ruleset or reviewer approval check. No merges or product-code edits were performed.
+
+The [central portfolio PR #2](https://github.com/vlovers/vlovers/pull/2) additionally has an exact-head successful offline test run on `6a7982b6e888`; the report now reuses PR metadata per execution and exposes transient GitHub mergeability. The test suite was updated after a failed run caused by old fixtures expecting four fields rather than five. Later commits require their own CI evidence.
+
+**Next review gate:** verify current head and required checks immediately before integration, obtain an authorized independent review, and validate each repository's branch rules. Avoid inferring release readiness or product acceptance from these CI observations.

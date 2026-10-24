@@ -141,3 +141,18 @@ Fresh comparisons against the **named live `main` ref** (not the historical `bas
 **Important API trap:** comparing `PR base.sha...PR head.sha` showed zero base-only commits because the observed `base.sha` values represented the original shared ancestor, **not the current tip of `main`**. The portfolio script now compares `PR head SHA...live base ref` for these three PRs, validates response metadata, and fails closed on compare errors. The report is read-only and cannot prove GitHub ruleset compliance or authorize a merge.
 
 **Next acceptance batch:** independently inspect all three PRs against current `main`, including delivery publication/Git-transfer documentation and workflow security interactions; decide integration order and reconcile in existing branches only after review. Re-run CI on each new head and record base/head SHA and reviewer disposition. Do not assume the existing successful PR checks validate the future integrated result.
+
+## Cross-repository exact-head CI checkpoint — 2026-10-24
+
+Rechecked all **13 open normalization PRs** across the five product repositories. All observed PR-triggered workflows completed successfully on the exact heads listed below. This is a dated observation, **not** independent review, a required-check/ruleset audit, or permission to merge. GitHub's `mergeable` field can be transient; in particular, AI Office #49 returned `false` during this check and requires a fresh integration/conflict inspection.
+
+| Repository | PRs and exact-head observed CI |
+| --- | --- |
+| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) `6c93c1c87219` — 1/1; [#272](https://github.com/vlovers/grid-atlas/pull/272) `17b5f56ff0a` — 9/9 |
+| AI Office | [#43](https://github.com/vlovers/ai-office/pull/43) `3eb4eaae2b8c` — 1/1; [#48](https://github.com/vlovers/ai-office/pull/48) `345706befe81` — 1/1; [#49](https://github.com/vlovers/ai-office/pull/49) `c42437335341` — 1/1 (mergeability needs recheck) |
+| RuleWitness | [#82](https://github.com/vlovers/rulewitness/pull/82) `7ea6357de953` — 2/2; [#83](https://github.com/vlovers/rulewitness/pull/83) `f01938a7c96a` — 2/2 |
+| MutationBoundary | [#68](https://github.com/vlovers/mutation-boundary/pull/68) `d901cc88697a` — 1/1; [#69](https://github.com/vlovers/mutation-boundary/pull/69) `8b830e3fe622` — 1/1; [#70](https://github.com/vlovers/mutation-boundary/pull/70) `4e67f8b95c53` — 1/1 |
+| Estima (target: develop) | [#13](https://github.com/vlovers/estima/pull/13) `804873ea0b0c` — 2/2; [#14](https://github.com/vlovers/estima/pull/14) `1b8b9e8e9233` — 2/2; [#15](https://github.com/vlovers/estima/pull/15) `02476a143dc2` — 2/2 |
+
+**Integration queue:** obtain non-author review and inspect the final diff/target-branch divergence before merging. Prioritize AI Office #49 mergeability diagnosis, then reconcile any stale PR bases without force-pushing away review evidence. Re-run exact-head CI after integration commits. Do not close product issues from workflow success alone.
+

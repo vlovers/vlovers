@@ -16,6 +16,7 @@ REPOSITORIES = (
     "rulewitness",
     "mutation-boundary",
     "estima",
+    "last-chapter",
 )
 BASE = "https://api.github.com"
 # Existing baseline PRs only. This is a read-only review queue, not a merge queue.
@@ -26,6 +27,7 @@ FOUNDATION_PRS = (
     ("mutation-boundary", 68),
     ("estima", 13),
     ("vlovers", 2),
+    ("last-chapter", 5),
 )
 
 # Separate review lanes: intake and CI/supply-chain changes remain unmerged until

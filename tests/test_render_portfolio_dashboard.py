@@ -43,14 +43,34 @@ class DashboardTests(unittest.TestCase):
     def test_known_file_overlap_requires_manual_reconciliation(self):
         from scripts.render_portfolio_dashboard import overlap_rows
         rows = overlap_rows([
-            {"repository": "vlovers/mutation-boundary", "number": 68, "state": "open"},
-            {"repository": "vlovers/mutation-boundary", "number": 69, "state": "open"},
-            {"repository": "vlovers/mutation-boundary", "number": 70, "state": "open"},
+            {"repository": "vlovers/mutation-boundary", "number": 68, "state": "open",
+             "head_sha": "d901cc8869" + "0" * 30},
+            {"repository": "vlovers/mutation-boundary", "number": 69, "state": "open",
+             "head_sha": "8b830e3fe6" + "0" * 30},
+            {"repository": "vlovers/mutation-boundary", "number": 70, "state": "open",
+             "head_sha": "4e67f8b95c" + "0" * 30},
         ])
         self.assertEqual(len(rows), 2)
         self.assertTrue(any("CONTRIBUTING.md" in row and "manual reconciliation required" in row
                             for row in rows))
         self.assertTrue(any("docs/RELEASING.md" in row for row in rows))
+
+    def test_stale_overlap_audit_never_claims_reconciliation(self):
+        from scripts.render_portfolio_dashboard import overlap_rows
+        prs = [
+            {"repository": "vlovers/mutation-boundary", "number": 68,
+             "state": "open", "head_sha": "a" * 40},
+            {"repository": "vlovers/mutation-boundary", "number": 69,
+             "state": "open", "head_sha": "8b830e3fe6" + "0" * 30},
+        ]
+        rows = overlap_rows(prs)
+        self.assertIn("stale audit (PR head changed", rows[0])
+        snapshot = {"schema_version": 1, "repositories": [], "errors": [],
+                    "tracked_prs": [dict(pr, attention="review_needed",
+                                        days_since_update=0, workflow_observation=None)
+                                    for pr in prs]}
+        self.assertIn("Known file overlaps", render(snapshot))
+        self.assertIn("stale audit (PR head changed", render(snapshot))
 
     def test_dependency_order_is_advisory_and_tracks_merged_predecessor(self):
         from scripts.render_portfolio_dashboard import dependency_rows

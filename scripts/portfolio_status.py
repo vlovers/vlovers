@@ -90,6 +90,19 @@ def summarize_workflow_runs(response, expected_sha):
         raise ValueError("Malformed Actions run")
     if not runs or any(run.get("head_sha") != expected_sha for run in runs):
         return "unknown (no exact-SHA evidence)"
+    valid_statuses = {"queued", "in_progress", "completed", "requested", "waiting", "pending"}
+    valid_conclusions = {
+        None, "success", "failure", "timed_out", "cancelled", "action_required",
+        "startup_failure", "neutral", "skipped", "stale",
+    }
+    for run in runs:
+        status, conclusion = run.get("status"), run.get("conclusion")
+        if not isinstance(status, str) or status not in valid_statuses:
+            raise ValueError("Invalid Actions run status")
+        if conclusion is not None and not isinstance(conclusion, str):
+            raise ValueError("Invalid Actions run conclusion")
+        if conclusion not in valid_conclusions:
+            raise ValueError("Unknown Actions run conclusion")
     failed = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
     if any(run.get("conclusion") in failed for run in runs):
         return "failure observed"

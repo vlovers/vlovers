@@ -1,3 +1,11 @@
+# Engineering work queue
+
+Updated 2026-10-24. This is a **coordination backlog**, not product implementation or authorization to merge. Review links are the source of truth; CI evidence is exact-commit only.
+
+## Current observations and superseded audit notes
+
+The dated snapshots below are historical evidence, not live merge clearance. The most recent rechecks supersede earlier mergeability readings; rerun exact-head CI and GitHub mergeability before any integration decision.
+
 ## Grid Atlas #272 failed-job root cause — 2026-10-24
 
 [PR handoff](https://github.com/vlovers/grid-atlas/pull/272#issuecomment-6387213768) and [failed Actions run](https://github.com/vlovers/grid-atlas/actions/runs/40110810456): `Unified archive experience / visual-accessibility` fails `tests/browser/unified-archive.spec.ts:60`. Ukrainian `/constructors` at 200% font size overflows viewport by 184px (Chromium) / 182px (WebKit), versus <=1px required. 2 failed, 22 passed. [Screenshots and traces](https://github.com/vlovers/grid-atlas/actions/runs/40110810456/artifacts/12566881106). Product agent owns the UI reflow fix; preserve accessibility assertion and rerun on new SHA. A mergeable PR with this failed workflow is **not release-ready**.
@@ -23,7 +31,7 @@ The ahead/behind values describe the **specific reverse comparison**, not an ass
 
 ## Coordination handoffs — 2026-10-24
 
-- [Grid Atlas #271 integration handoff](https://github.com/vlovers/grid-atlas/pull/271#issuecomment-6387124226): investigate current `mergeable=false`, update branch safely, validate updated SHA; do not alter product code.
+- [Grid Atlas #271 integration handoff](https://github.com/vlovers/grid-atlas/pull/271#issuecomment-6387124226): original handoff followed a transient `mergeable=false` reading; later recheck was `true`. Validate current SHA before any changes; do not alter product code.
 - [Last Chapter #5 formatting handoff](https://github.com/vlovers/last-chapter/pull/5#issuecomment-6387124609): product agent owns four Prettier violations; keep the formatting gate intact.
 - AI Office #43 previously received a more nuanced assessment noting mergeability can flip transiently; repeat GitHub observation and inspect the actual compare before declaring a persistent conflict.
 - **Handoff comments are requests, not evidence that an agent has begun or completed work.**
@@ -31,7 +39,7 @@ The ahead/behind values describe the **specific reverse comparison**, not an ass
 
 ## Exact-head integration readiness audit — 2026-10-24
 
-This section supersedes earlier mergeability observations. GitHub mergeability can change when the base branch moves. CI observations are not a certification of branch rules, reviewer independence or merge approval.
+**Historical snapshot (superseded by the later Grid Atlas and AI Office rechecks above).** GitHub mergeability can change when the base branch moves. CI observations are not a certification of branch rules, reviewer independence or merge approval.
 
 | Repository | PRs | Exact-head Actions | Latest GitHub mergeability | Action |
 | --- | --- | --- | --- | --- |
@@ -51,13 +59,9 @@ Audited complete changed-file lists for AI Office #43/#48/#49, RuleWitness #82/#
 
 - **MutationBoundary:** #68 ↔ #69 overlap on `CONTRIBUTING.md`; #68 ↔ #70 overlap on `README.md` and `docs/RELEASING.md`. Integrate #68 first, then rebase/reconcile #69 and #70; preserve the v0.6.0 release history and reconcile stale v0.4.0 wording in #70. No blind conflict resolution.
 - **AI Office, RuleWitness, Estima, Grid Atlas:** no direct changed-file overlaps among the audited PRs. This is **not** a semantic compatibility or merge-readiness guarantee.
-- **Grid Atlas #271/#272:** both GitHub mergeability observations were false; investigate branch drift even though the changed-file sets do not overlap.
+- **Grid Atlas #271/#272:** initial GitHub mergeability observations were false; later recheck showed true. The changed-file sets did not overlap at the audited SHAs; recheck both conditions after any push.
 - Re-run this audit if any PR head changes.
 
-
-# Engineering work queue
-
-Updated 2026-10-24. This is a **coordination backlog**, not product implementation or authorization to merge. Review links are the source of truth; CI evidence is exact-commit only.
 
 ## P0 — Integration readiness
 
@@ -71,7 +75,7 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 | Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) → [#272](https://github.com/vlovers/grid-atlas/pull/272) | Verify pinned workflows; wait for product owner to resolve browser CI failure | Never weaken accessibility test |
 | Last Chapter | [draft #5](https://github.com/vlovers/last-chapter/pull/5) / [issue #1](https://github.com/vlovers/last-chapter/issues/1) | Verify committed lockfile, `npm ci`, and final-head CI; author decides draft readiness | Product code belongs to game team |
 
-## Live verification — 2026-10-24 (exact PR head observations)
+## Historical verification — 2026-10-24 (exact PR head observations; superseded where newer rechecks exist)
 
 These are observations, **not** merge authorization. Re-check after every push.
 

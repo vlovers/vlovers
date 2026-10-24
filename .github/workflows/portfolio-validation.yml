@@ -9,10 +9,12 @@ on:
       - 'scripts/render_portfolio_dashboard.py'
       - 'scripts/compare_portfolio_snapshots.py'
       - 'scripts/portfolio_history.py'
+      - 'scripts/restore_portfolio_history.py'
       - 'tests/test_portfolio_status.py'
       - 'tests/test_render_portfolio_dashboard.py'
       - 'tests/test_compare_portfolio_snapshots.py'
       - 'tests/test_portfolio_history.py'
+      - 'tests/test_restore_portfolio_history.py'
       - 'docs/ENGINEERING_PORTFOLIO.md'
       - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
       - 'docs/BRANCH_RULESET_SETUP.md'
@@ -25,10 +27,12 @@ on:
       - 'scripts/render_portfolio_dashboard.py'
       - 'scripts/compare_portfolio_snapshots.py'
       - 'scripts/portfolio_history.py'
+      - 'scripts/restore_portfolio_history.py'
       - 'tests/test_portfolio_status.py'
       - 'tests/test_render_portfolio_dashboard.py'
       - 'tests/test_compare_portfolio_snapshots.py'
       - 'tests/test_portfolio_history.py'
+      - 'tests/test_restore_portfolio_history.py'
       - 'docs/ENGINEERING_PORTFOLIO.md'
       - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
       - 'docs/BRANCH_RULESET_SETUP.md'
@@ -50,5 +54,5 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.11'
-      - run: python3 -m py_compile scripts/portfolio_status.py scripts/render_portfolio_dashboard.py scripts/compare_portfolio_snapshots.py scripts/portfolio_history.py tests/test_portfolio_status.py tests/test_render_portfolio_dashboard.py tests/test_compare_portfolio_snapshots.py tests/test_portfolio_history.py
+      - run: python3 -m py_compile scripts/portfolio_status.py scripts/render_portfolio_dashboard.py scripts/compare_portfolio_snapshots.py scripts/portfolio_history.py scripts/restore_portfolio_history.py tests/test_portfolio_status.py tests/test_render_portfolio_dashboard.py tests/test_compare_portfolio_snapshots.py tests/test_portfolio_history.py tests/test_restore_portfolio_history.py
       - run: python3 -m unittest discover -s tests -v

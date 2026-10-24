@@ -76,8 +76,17 @@ KNOWN_FILE_OVERLAPS = (
 
 
 def overlap_rows(prs):
-    index = {(p.get("repository"), p.get("number")): p for p in prs
-             if isinstance(p, dict)}
+    index = {}
+    for p in prs:
+        if not isinstance(p, dict):
+            raise ValueError("Malformed overlap PR record")
+        repository, number = p.get("repository"), p.get("number")
+        if not isinstance(repository, str) or type(number) is not int:
+            raise ValueError("Invalid overlap PR identity")
+        key = (repository, number)
+        if key in index:
+            raise ValueError("Duplicate overlap PR")
+        index[key] = p
     rows = []
     for repo, first, second, paths, audited_first, audited_second in KNOWN_FILE_OVERLAPS:
         a, b = index.get((repo, first)), index.get((repo, second))

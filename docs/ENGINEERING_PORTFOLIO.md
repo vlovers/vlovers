@@ -81,3 +81,7 @@ When an exact-head set contains both an actual failed workflow and an `action_re
 Successful observed Actions runs do not imply a reviewer has approved a PR. A missing, malformed or unrecognized review observation is classified as `unknown`, not `review_observed_not_authorized`. Only an explicit positive count of head-SHA non-author approvals can enter the review-observed category, and even that is not authorization to merge.
 
 Review transitions are processed in GitHub's chronological review order. A `DISMISSED` event clears the same reviewer's prior decisive `APPROVED` or `CHANGES_REQUESTED` observation; a later new decisive review can count again. Historical head-SHA approvals are not carried forward to a new commit.
+
+### Dashboard snapshot input validation
+
+The offline renderer rejects unexpected PR dependency states instead of interpolating them into Markdown. Overlap-audit freshness requires valid 40-character hexadecimal head SHAs; malformed SHAs produce `unknown (invalid head SHA)` rather than a false current/stale conclusion. The report remains advisory and must not be treated as merge clearance.

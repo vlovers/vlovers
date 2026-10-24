@@ -22,7 +22,7 @@ These are observations, **not** merge authorization. Re-check after every push.
 | --- | --- | --- | --- | --- |
 | [Grid Atlas #271](https://github.com/vlovers/grid-atlas/pull/271) | `6c93c1c87` | 1 success | false | Resolve branch conflict without changing product code |
 | [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272) | `1c22563d0` | 8 success, 1 failure, 1 cancelled | false | Identify failing check and resolve integration conflict; do not disable browser checks |
-| [Last Chapter #5](https://github.com/vlovers/last-chapter/pull/5) | `d9d79b088` | 1 failure | true | Inspect current failed job; earlier green SHA is superseded |
+| [Last Chapter #5](https://github.com/vlovers/last-chapter/pull/5) | `d9d79b088` | 1 failure | true | `npm run format:check` fails on `docs/story/03-DIALOGUE-BIBLE.md`, `docs/story/06-MYSTERY-AND-PUZZLES.md`, `src/content/mara.ts`, `tests/mara-conversations.test.ts`; route to game agent, preserve formatting gate |
 
 Other observed PR mergeability (not approval): AI Office #43/#48/#49, RuleWitness #82/#83, MutationBoundary #68/#69/#70 and Estima #13/#14/#15 were reported mergeable by GitHub. Their current exact-head CI has **not** been re-certified in this verification batch.
 

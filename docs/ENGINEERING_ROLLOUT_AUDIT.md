@@ -184,3 +184,21 @@ The remaining infrastructure queue was rechecked for GitHub mergeability: AI Off
 The [central portfolio PR #2](https://github.com/vlovers/vlovers/pull/2) additionally has an exact-head successful offline test run on `6a7982b6e888`; the report now reuses PR metadata per execution and exposes transient GitHub mergeability. The test suite was updated after a failed run caused by old fixtures expecting four fields rather than five. Later commits require their own CI evidence.
 
 **Next review gate:** verify current head and required checks immediately before integration, obtain an authorized independent review, and validate each repository's branch rules. Avoid inferring release readiness or product acceptance from these CI observations.
+
+
+## Integration order and review gate — 2026-10-24
+
+Fresh GraphQL review-submission inspection of all **14 open engineering PRs** (13 product-repository PRs plus portfolio #2) found **zero `APPROVED` submissions**. AI Office #43, RuleWitness #82, MutationBoundary #68, and Estima #13 have owner `COMMENTED` review entries; comments are not approvals or independent review. This is an observation of the available review history, not a branch-ruleset audit.
+
+**Recommended integration sequence, subject to authorized review and fresh exact-head CI:**
+
+| Repository | Review / integration order | Why |
+| --- | --- | --- |
+| Grid Atlas | #271 issue templates → #272 CI security | Separate template scope from broad CI changes; #272 also includes `apps/web/src/components/atlas/catalogue.module.css`, so inspect this unexpected product-style diff and do not treat it as CI-only |
+| AI Office | #43 agent foundation → #48 issue intake → #49 CI security | Distinct file sets in the current PR patches; #49 has already integrated latest `main` to resolve its `package.json` conflict; preserve lint and workflow pin checks |
+| RuleWitness | #82 agent foundation → #83 issue intake | #83 changes `SECURITY.md` and adds tests; verify security reporting instructions and test behavior |
+| MutationBoundary | #68 foundation → #69 intake → #70 CI/release guard | #68/#69 both modify `CONTRIBUTING.md`; #68/#70 both modify `README.md` and `docs/RELEASING.md`. Recheck these shared files after each integration. #70 changes publish workflow: verify release safety, never trigger publication as part of normalization |
+| Estima | #13 foundation → #14 intake → #15 CI security (target `develop`) | #14 changes `SECURITY.md`; #15 changes Bun/PostgreSQL workflows. Preserve real database validation; do not redirect to `main` |
+| Central dashboard | #2 after reviewer acceptance | Read-only report and offline tests; do not mistake mergeability or observed CI for ruleset compliance |
+
+**Before each merge:** inspect the current base-to-head diff and unexpected paths; obtain the appropriate reviewer decision; verify branch protection/required checks through repository settings; confirm the exact current head SHA and Actions conclusions; integrate one PR at a time; then refresh the next PR's base comparison and rerun its CI if its branch changes. Do not batch-merge all PRs based on historical CI. No PRs were merged or review approvals fabricated during this audit.

@@ -115,3 +115,5 @@ Historical attention counts include `action_required` alongside CI failure, pend
 Artifact selection requires parseable UTC `created_at` timestamps (GitHub's `Z` form); timezone-naive or non-UTC metadata is ignored rather than compared inconsistently across artifact pages.
 
 The scheduled workflow publishes `engineering-portfolio-snapshot` only when a valid `portfolio-history.json` has been produced after a successful restore step. If history is unavailable, it uploads available JSON/Markdown evidence as `engineering-portfolio-diagnostic` instead. Diagnostic artifacts are deliberately excluded from future history restoration so an incomplete upload cannot repeatedly break subsequent runs.
+
+A restorable artifact also requires the **current history append step to succeed**. A restored-but-stale `portfolio-history.json` is not sufficient: when appending fails, the run emits only a diagnostic artifact, even if an old history file remains in the workspace.

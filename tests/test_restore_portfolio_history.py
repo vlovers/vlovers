@@ -9,6 +9,13 @@ from scripts.restore_portfolio_history import extract_history, select_previous_a
 
 
 class RestoreHistoryTests(unittest.TestCase):
+    def test_workflow_never_appends_history_after_restore_failure(self):
+        from pathlib import Path
+        workflow = Path(".github/workflows/portfolio-snapshot.yml").read_text(encoding="utf-8")
+        self.assertIn("id: restore_history", workflow)
+        self.assertIn("steps.restore_history.outcome == 'success'", workflow)
+        self.assertIn("name: Upload snapshot even when some GitHub queries fail", workflow)
+
     def test_selects_latest_nonexpired_prior_run(self):
         payload = {"artifacts": [
             {"id": 1, "name": "engineering-portfolio-snapshot", "created_at": "2026-10-22", "expired": False, "workflow_run": {"id": 10}},

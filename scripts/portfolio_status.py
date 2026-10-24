@@ -84,6 +84,10 @@ def summarize_workflow_runs(response, expected_sha):
     """Conservative observation of PR workflow runs, not required-check certification."""
     if not isinstance(response, dict):
         raise ValueError("Malformed Actions response")
+    if not isinstance(expected_sha, str) or not re.fullmatch(
+        r"[0-9a-fA-F]{40}", expected_sha
+    ):
+        raise ValueError("Invalid expected Actions head SHA")
     runs = response.get("workflow_runs")
     total = response.get("total_count")
     if not isinstance(runs, list) or type(total) is not int or total < len(runs):

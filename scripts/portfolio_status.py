@@ -346,9 +346,7 @@ def classify_pr_attention(record):
         isinstance(review, str) and review.startswith("historical approvals only")
     ):
         return "review_needed"
-    if isinstance(review, str) and re.fullmatch(
-        r"[1-9][0-9]* head-SHA non-author approval\\(s\\) observed \\(not acceptance\\)", review
-    ):
+    if isinstance(review, str) and review.endswith(" head-SHA non-author approval(s) observed (not acceptance)") and review.split(" ", 1)[0].isdigit() and int(review.split(" ", 1)[0]) > 0:
         return "review_observed_not_authorized"
     return "unknown"
 

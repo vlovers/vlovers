@@ -60,6 +60,47 @@ def summarize_workflow_runs(response, expected_sha):
     return "unknown (non-success conclusion)"
 
 
+
+def summarize_review_evidence(reviews, expected_sha, author_login):
+    """Review observations only: never branch protection or independent acceptance."""
+    if not isinstance(reviews, list) or not author_login:
+        raise ValueError("Incomplete PR review metadata")
+    latest_decisive = {}
+    for review in reviews:
+        user = review.get("user") or {}
+        login = user.get("login")
+        if not login:
+            raise ValueError("Review without reviewer identity")
+        if login.lower() == author_login.lower() or user.get("type") == "Bot":
+            continue
+        if review.get("state") in {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}:
+            # GitHub's PR reviews endpoint lists reviews chronologically.
+            latest_decisive[login.lower()] = review
+    if any(review["state"] == "CHANGES_REQUESTED" for review in latest_decisive.values()):
+        return "changes requested observed (not cleared)"
+    approvals = sum(
+        review["state"] == "APPROVED" and review.get("commit_id") == expected_sha
+        for review in latest_decisive.values()
+    )
+    if approvals:
+        return f"{approvals} head-SHA non-author approval(s) observed (not acceptance)"
+    if any(review["state"] == "APPROVED" for review in latest_decisive.values()):
+        return "historical approvals only (not head-SHA)"
+    return "no head-SHA non-author approval observed"
+
+
+def fetch_pr_reviews(repo, number):
+    """Retrieve every review page; incomplete responses cannot certify approval."""
+    reviews = []
+    for page in range(1, 21):
+        batch = request(f"/repos/{repo}/pulls/{number}/reviews?per_page=100&page={page}")
+        if not isinstance(batch, list):
+            raise ValueError("Malformed PR review response")
+        reviews.extend(batch)
+        if len(batch) < 100:
+            return reviews
+    raise ValueError("PR review pagination exceeded safety limit")
+
 def foundation_pr_status(name, number):
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
     pr = request(f"/repos/{repo}/pulls/{number}")
@@ -70,7 +111,9 @@ def foundation_pr_status(name, number):
     runs = request(
         f"/repos/{repo}/actions/runs?event=pull_request&head_sha={sha}&per_page=100"
     )
-    return state, sha, summarize_workflow_runs(runs, sha)
+    author_login = (pr.get("user") or {}).get("login")
+    review = summarize_review_evidence(fetch_pr_reviews(repo, number), sha, author_login)
+    return state, sha, summarize_workflow_runs(runs, sha), review
 
 
 def main():
@@ -117,20 +160,22 @@ def main():
             errors += 1
 
     print("\n## Foundation PRs — exact head SHA and observed PR Actions")
-    print("| Repository / PR | State | Head SHA | Observed PR workflow runs |")
-    print("| --- | --- | --- | --- |")
+    print("| Repository / PR | State | Head SHA | Observed PR workflow runs | Review observation |")
+    print("| --- | --- | --- | --- | --- |")
     for name, number in FOUNDATION_PRS:
         label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
         try:
-            state, sha, ci = foundation_pr_status(name, number)
-            print(f"| {label} | {state} | `{sha[:12]}` | {ci} |")
+            state, sha, ci, review = foundation_pr_status(name, number)
+            print(f"| {label} | {state} | `{sha[:12]}` | {ci} | {review} |")
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
-            print(f"| {label} | unknown | unknown | unknown |")
+            print(f"| {label} | unknown | unknown | unknown | unknown |")
             print(f"Warning: could not read foundation PR {name} #{number}: {exc}", file=sys.stderr)
             errors += 1
     print(
-        "\nObserved Actions are **not** required-check, branch-rule, independent-review, "
-        "product-acceptance or release evidence. Unknown never means pass."
+        "\nObserved Actions and review submissions are **not** required-check, branch-rule, "
+        "independent-review, product-acceptance, merge or release certification. "
+        "A head-SHA approval observation does not establish reviewer independence. "
+        "Unknown never means pass."
     )
     if errors:
         print(f"\n{errors} GitHub queries failed; do not treat unknown as zero or green.", file=sys.stderr)

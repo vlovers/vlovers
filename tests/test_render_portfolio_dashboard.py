@@ -40,6 +40,22 @@ class DashboardTests(unittest.TestCase):
 
 
 
+    def test_unhashable_attention_and_dependency_state_raise_value_error(self):
+        from scripts.render_portfolio_dashboard import dependency_rows
+        base = {"schema_version": 1, "repositories": [], "errors": [],
+                "tracked_prs": [{"repository": "vlovers/ai-office", "number": 43,
+                                 "attention": "review_needed",
+                                 "days_since_update": 0,
+                                 "workflow_observation": None}]}
+        for invalid in ([], {}, ["review_needed"]):
+            with self.subTest(attention=invalid), self.assertRaises(ValueError):
+                render(dict(base, tracked_prs=[
+                    dict(base["tracked_prs"][0], attention=invalid)]))
+        for invalid in ([], {}, ["open"]):
+            with self.subTest(state=invalid), self.assertRaises(ValueError):
+                dependency_rows([{"repository": "vlovers/ai-office",
+                                  "number": 43, "state": invalid}])
+
     def test_known_file_overlap_requires_manual_reconciliation(self):
         from scripts.render_portfolio_dashboard import overlap_rows
         rows = overlap_rows([

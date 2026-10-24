@@ -25,6 +25,24 @@ class RestoreHistoryTests(unittest.TestCase):
             archive.writestr("../../unsafe.txt", "not extracted")
         self.assertEqual(len(extract_history(buffer.getvalue())), 1)
 
+    def test_rejects_unordered_history(self):
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("portfolio-history.json", json.dumps([
+                {"observed_at": "2026-10-25T00:00:00Z"},
+                {"observed_at": "2026-10-24T00:00:00Z"},
+            ]))
+        with self.assertRaises(ValueError):
+            extract_history(buffer.getvalue())
+
+    def test_ignores_artifacts_without_workflow_metadata(self):
+        payload = {"artifacts": [
+            {"id": 7, "name": "engineering-portfolio-snapshot", "expired": False},
+            {"id": 8, "name": "engineering-portfolio-snapshot", "expired": False,
+             "workflow_run": {"id": 10}, "created_at": "2026-10-24"},
+        ]}
+        self.assertEqual(select_previous_artifact(payload, 10), None)
+
     def test_rejects_missing_history(self):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:

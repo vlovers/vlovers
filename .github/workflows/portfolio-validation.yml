@@ -9,6 +9,8 @@ on:
       - 'tests/test_portfolio_status.py'
       - 'docs/ENGINEERING_PORTFOLIO.md'
       - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
+      - 'docs/BRANCH_RULESET_SETUP.md'
+      - 'docs/ENGINEERING_WORK_QUEUE.md'
       - '.github/workflows/portfolio-validation.yml'
   pull_request:
     paths:
@@ -16,6 +18,8 @@ on:
       - 'tests/test_portfolio_status.py'
       - 'docs/ENGINEERING_PORTFOLIO.md'
       - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
+      - 'docs/BRANCH_RULESET_SETUP.md'
+      - 'docs/ENGINEERING_WORK_QUEUE.md'
       - '.github/workflows/portfolio-validation.yml'
 
 permissions:

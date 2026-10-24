@@ -62,6 +62,21 @@ class PortfolioStatusTests(unittest.TestCase):
                 if field != "mergeability_observation":
                     self.assertEqual(result, "unknown")
 
+    def test_actions_status_conclusion_consistency(self):
+        summarize = portfolio_status.summarize_workflow_runs
+        sha = "a" * 40
+        def payload(status, conclusion):
+            return {"total_count": 1, "workflow_runs": [
+                {"head_sha": sha, "status": status, "conclusion": conclusion}]}
+        self.assertEqual(summarize(payload("completed", "success"), sha),
+                         "1/1 observed success")
+        self.assertEqual(summarize(payload("in_progress", None), sha), "pending")
+        for status, conclusion in (("completed", None),
+                                   ("queued", "success"),
+                                   ("in_progress", "failure")):
+            with self.assertRaises(ValueError):
+                summarize(payload(status, conclusion), sha)
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

@@ -4,6 +4,12 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+### Latest exact-head gate recheck — 2026-10-24
+
+- **Grid Atlas [#272](https://github.com/vlovers/grid-atlas/pull/272):** head `1c22563d0ec0de332e5bfd2082e74f6108cf3350` unchanged; exact-head workflow `Unified archive experience` still concludes `failure`, while `Next.js web` is `cancelled`. Do not infer full green CI from the successful sibling workflows. Accessibility reflow remains with the product agent.
+- **Last Chapter [#5](https://github.com/vlovers/last-chapter/pull/5):** head advanced to `0a94333bd74bfc03c080cd2de3ff46eede5eb518`. Both exact-head workflows (`CI` and `Normalize formatting on working PR`) were `in_progress` at this observation. Previous-head `action_required` is historical, **not** the status of the new head. Recheck when these runs finish.
+- **AI Office [#43](https://github.com/vlovers/ai-office/pull/43):** unchanged head `3eb4eaae2b8c7af7e788d1d4feb14602e0d7ea92` had one successful exact-head `AI Office validation` workflow. This alone does not settle downstream #48/#49 dependency order or review.
+
 ## Portfolio-wide integration observation — 2026-10-24
 
 Read-only GitHub PR metadata rechecked across 14 **open** engineering PRs: Grid Atlas #271/#272; AI Office #43/#48/#49; RuleWitness #82/#83; MutationBoundary #68/#69/#70; Estima #13/#14/#15; Last Chapter #5. Every sampled PR returned `mergeable=true` at query time. This is a transient GitHub mergeability observation, **not** a claim of successful CI, reviewer approval, conflict-free sequential integration, or authorization to merge. In particular, MutationBoundary #68/#69/#70 retain audited file overlaps, Grid Atlas #272 retains an observed failing accessibility workflow, and Last Chapter #5 is still blocked on `action_required` workflow conclusions.

@@ -38,11 +38,13 @@ def select_previous_artifact(payload, current_run_id):
             continue
         if type(artifact_id) is not int or artifact_id < 1:
             continue
-        if not isinstance(created_at, str) or not created_at:
+        if not isinstance(created_at, str) or not created_at.endswith("Z"):
             continue
         try:
             parsed = datetime.datetime.fromisoformat(created_at.replace("Z", "+00:00"))
         except ValueError:
+            continue
+        if parsed.utcoffset() != datetime.timedelta(0):
             continue
         candidates.append((parsed, artifact_id, artifact))
     return max(candidates, key=lambda item: (item[0], item[1]))[2] if candidates else None

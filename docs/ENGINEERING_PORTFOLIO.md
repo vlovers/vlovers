@@ -55,3 +55,7 @@ The script performs read-only GitHub API requests and prints current default-bra
 **CI scope:** `portfolio-validation.yml` runs offline regression tests and Python compilation on script, test, workflow **and dashboard documentation** changes. It does not query live GitHub or verify branch-protection settings; use the report manually for live status.
 
 At each iteration: read fresh status, revisit issue criteria, choose one cohesive feature outcome per active project, and retain dated decisions or blockers. Do not manually edit counts without verifying them.
+
+### Mergeability evidence policy
+
+GitHub's `mergeable` value is a point-in-time computation and may flip as its mergeability calculation completes. When it is `false`, repeat the query and inspect the reverse `PR head...base` comparison, changed-file overlap, and the exact-head Actions results before labeling the issue a persistent conflict. A successful CI run on a PR head does not certify the final merge commit, and `mergeable=true` does not replace independent review or branch rules.

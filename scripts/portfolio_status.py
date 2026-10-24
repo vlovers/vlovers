@@ -45,7 +45,7 @@ def safe_markdown_cell(value):
         raise ValueError("Invalid GitHub text metadata")
     if any(ord(char) < 32 or ord(char) == 127 for char in value):
         raise ValueError("Control character in GitHub metadata")
-    return value.replace("|", "\\|")
+    return value.replace(chr(92), chr(92) * 2).replace("|", chr(92) + "|")
 
 
 FOLLOWUP_PRS = (
@@ -103,7 +103,8 @@ def summarize_workflow_runs(response, expected_sha):
 
 def summarize_review_evidence(reviews, expected_sha, author_login):
     """Review observations only: never branch protection or independent acceptance."""
-    if not isinstance(reviews, list) or not author_login:
+    validate_sha(expected_sha)
+    if not isinstance(reviews, list) or not isinstance(author_login, str) or not author_login:
         raise ValueError("Incomplete PR review metadata")
     latest_decisive = {}
     for review in reviews:
@@ -114,9 +115,12 @@ def summarize_review_evidence(reviews, expected_sha, author_login):
         kind = user.get("type")
         if not isinstance(login, str) or not login or kind not in {"User", "Bot", "Organization", "Mannequin"}:
             raise ValueError("Incomplete review identity or account type")
+        state = review.get("state")
+        if state not in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED", "COMMENTED", "PENDING"):
+            raise ValueError("Invalid GitHub review state")
         if login.lower() == author_login.lower() or kind != "User":
             continue
-        if review.get("state") in {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}:
+        if state in {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}:
             # GitHub's PR reviews endpoint lists reviews chronologically.
             latest_decisive[login.lower()] = review
     if any(review["state"] == "CHANGES_REQUESTED" for review in latest_decisive.values()):

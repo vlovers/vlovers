@@ -4,6 +4,12 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+## Portfolio-wide integration observation — 2026-10-24
+
+Read-only GitHub PR metadata rechecked across 14 **open** engineering PRs: Grid Atlas #271/#272; AI Office #43/#48/#49; RuleWitness #82/#83; MutationBoundary #68/#69/#70; Estima #13/#14/#15; Last Chapter #5. Every sampled PR returned `mergeable=true` at query time. This is a transient GitHub mergeability observation, **not** a claim of successful CI, reviewer approval, conflict-free sequential integration, or authorization to merge. In particular, MutationBoundary #68/#69/#70 retain audited file overlaps, Grid Atlas #272 retains an observed failing accessibility workflow, and Last Chapter #5 is still blocked on `action_required` workflow conclusions.
+
+Last Chapter #5 moved again to head `830486fc1913b0c16f3b100dde78245f3dd85e55`; both exact-head workflows (`CI` and `Normalize formatting on working PR`) returned `action_required`. No current-head green verification was observed. Agent/owner must inspect the GitHub run UI and address any required approval or execution restriction before judging code quality.
+
 ## Live follow-up — 2026-10-24 (observations, not clearance)
 
 - **Central portfolio #2:** previous head `e505fe52ea8764ec87262c3914b7a29949f2163a` passed its exact-head Actions run. Recheck after this documentation update.

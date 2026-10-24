@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Read-only public GitHub portfolio status; no third-party packages required."""
 
+import argparse
 import json
 import os
 import re
@@ -309,6 +310,68 @@ def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
     raise ValueError(f"{endpoint} pagination exceeded safety limit")
 
 
+
+def build_snapshot():
+    """Machine-readable observations; errors stay explicit and fail the CLI."""
+    snapshot = {"schema_version": 1, "owner": OWNER, "repositories": [], "tracked_prs": [], "errors": []}
+    for name in REPOSITORIES:
+        repo = f"{OWNER}/{name}"
+        record = {"repository": repo, "default_branch": None, "head_sha": None,
+                  "open_issues": None, "open_prs": None, "latest_release": None}
+        try:
+            metadata = request(f"/repos/{repo}")
+            branch = metadata["default_branch"]
+            if not isinstance(branch, str) or not branch or len(branch) > 255 or any(
+                ord(c) < 32 or ord(c) == 127 or c == "/" for c in branch
+            ):
+                raise ValueError("Invalid default branch")
+            record["default_branch"] = branch
+            record["head_sha"] = validate_sha(request(
+                f"/repos/{repo}/commits/{urllib.parse.quote(branch, safe='')}"
+            )["sha"])
+            record["open_issues"] = count_open_items(repo, "issues", exclude_pull_requests=True)
+            record["open_prs"] = count_open_items(repo, "pulls")
+            try:
+                record["latest_release"] = safe_markdown_cell(
+                    request(f"/repos/{repo}/releases/latest")["tag_name"]
+                )
+            except urllib.error.HTTPError as exc:
+                if exc.code != 404:
+                    raise
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
+                TimeoutError, ValueError) as exc:
+            snapshot["errors"].append({"target": repo, "error_type": type(exc).__name__})
+        snapshot["repositories"].append(record)
+
+    cache = {}
+    for name, number, *lane in (*FOUNDATION_PRS, *FOLLOWUP_PRS):
+        record = {"repository": f"{OWNER}/{name}", "number": number,
+                  "lane": lane[0] if lane else "foundation", "state": None,
+                  "head_sha": None, "workflow_observation": None,
+                  "review_observation": None, "mergeability_observation": None}
+        try:
+            state, sha, workflow, review, mergeability = foundation_pr_status(name, number, cache)
+            record.update(state=state, head_sha=sha, workflow_observation=workflow,
+                          review_observation=review, mergeability_observation=mergeability)
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
+                TimeoutError, ValueError) as exc:
+            snapshot["errors"].append({"target": f"{OWNER}/{name}#{number}",
+                                       "error_type": type(exc).__name__})
+        snapshot["tracked_prs"].append(record)
+    return snapshot
+
+
+def cli():
+    parser = argparse.ArgumentParser(description="Read-only GitHub engineering portfolio report")
+    parser.add_argument("--format", choices=("markdown", "json"), default="markdown")
+    args = parser.parse_args()
+    if args.format == "json":
+        snapshot = build_snapshot()
+        print(json.dumps(snapshot, indent=2, sort_keys=True))
+        return 1 if snapshot["errors"] else 0
+    return main()
+
+
 def main():
     errors = 0
     pr_cache = {}
@@ -356,4 +419,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(cli())

@@ -95,3 +95,5 @@ The attention classifier treats malformed review observations (including lists, 
 PR attention classification also requires a recognized PR state and a valid full 40-character hexadecimal head SHA for open PRs. Missing fields, malformed records, or invalid head identities yield `unknown` rather than a review-ready classification.
 
 A successful Actions observation is eligible for review triage only when it has the canonical `N/N observed success` form with matching positive counts. Partial or inconsistent totals (for example `1/2 observed success`) remain `unknown`; this still does not certify required checks or authorize merging.
+
+Attention triage checks evidence types before comparing CI, review, or mergeability observations. Non-string CI/review observations never become review-ready; missing mergeability is still not an authorization to merge and must be checked independently.

@@ -224,3 +224,23 @@ The exact-head `quality` run on `3ae5141f781cb36e272ce0f7be7c0ace5b131704` faile
 ### Agent work handoff contract
 
 For each agent task, record: **owner / repository / base branch / scoped paths / issue / acceptance criteria / required checks / dependencies / non-goals / handoff artifacts**. One agent owns each overlapping file set at a time. Agents must not merge, release, publish, delete branches, force-push, weaken checks, or change secrets without explicit authorization. An agent's `done` means evidence-backed PR readiness, not product acceptance or deployment. The coordinator tracks blockers and redirects product work to its owner rather than implementing it.
+
+
+## GitHub branch governance audit — 2026-10-24
+
+Read-only API inspection of repository rulesets, classic branch protection and default-branch `.github/CODEOWNERS`. **Do not infer that a 403 means protection is disabled.**
+
+| Repository | Protected integration branch | Repository rulesets API | Classic branch protection API | CODEOWNERS at checked branch |
+| --- | --- | --- | --- | --- |
+| Grid Atlas | `main` | Empty list | 403 integration access denied | Not found |
+| AI Office | `main` | Empty list | 403 integration access denied | Not found |
+| RuleWitness | `main` | Active [Protect main ruleset](https://github.com/vlovers/rulewitness/rules/25238807) | 403 integration access denied | Not found |
+| MutationBoundary | `main` | Empty list | 403 integration access denied | Not found |
+| Estima | `develop` | Empty list | 403 integration access denied | Not found |
+| Last Chapter | `main` | Empty list | 403 integration access denied | Not found |
+
+**RuleWitness ruleset #25238807, verified by its detail endpoint:** default branch target; active enforcement; prevent deletion and non-fast-forward pushes; require PR; required check context `check` (integration id 15368); `required_approving_review_count: 0`, no code-owner approval, no last-push approval, no required thread resolution, non-strict status checks. No bypass actors are listed. Thus it enforces a PR and a check, **not independent approval**. Verify that the `check` context still corresponds to a currently running required job.
+
+**Limits:** empty repository-ruleset lists do not exclude classic branch protection, organization-level policy, or other access controls. The integration cannot read classic protection (403). CODEOWNERS absence is based on the canonical `.github/CODEOWNERS` location only; check root `CODEOWNERS` and `docs/CODEOWNERS` before asserting no owners file exists anywhere.
+
+**Owner decision needed before configuration writes:** choose review count (recommend at least one genuinely independent human approval where collaborators exist), stale-review dismissal/last-push approval, required thread resolution, and strict required checks. Validate exact job names from the live workflows before enforcing; an incorrect required check can deadlock all PRs. Preserve Estima's `develop` target. Enable settings only with explicit authorization and sufficient GitHub permissions; do not invent approvals or silently bypass required checks.

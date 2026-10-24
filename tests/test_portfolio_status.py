@@ -12,6 +12,15 @@ class PortfolioStatusTests(unittest.TestCase):
 
 
 
+    def test_unhashable_review_observation_fails_closed(self):
+        base = {"state": "open", "head_sha": "a" * 40,
+                "workflow_observation": "1/1 observed success",
+                "review_observation": [],
+                "mergeability_observation": "mergeable observed (not clearance)"}
+        for invalid in ([], {}, None, 1):
+            self.assertEqual(portfolio_status.classify_pr_attention(
+                dict(base, review_observation=invalid)), "unknown")
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

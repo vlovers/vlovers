@@ -15,8 +15,11 @@ class PortfolioStatusTests(unittest.TestCase):
                 return {"total_count": 1, "workflow_runs": [
                     {"head_sha": "a" * 40, "status": "completed", "conclusion": "success"}
                 ]}
+            if "/reviews?" in path:
+                return []
             if "/pulls/" in path:
-                return {"head": {"sha": "a" * 40}, "state": "open", "merged_at": None}
+                return {"head": {"sha": "a" * 40}, "state": "open", "merged_at": None,
+                        "user": {"login": "author"}}
             if path.endswith("/commits/main"):
                 return {"sha": "a" * 40}
             if path.endswith("/releases/latest"):
@@ -78,15 +81,20 @@ class PortfolioStatusTests(unittest.TestCase):
         def fake_request(path):
             paths.append(path)
             if path.endswith("/pulls/82"):
-                return {"head": {"sha": sha}, "state": "open", "merged_at": None}
+                return {"head": {"sha": sha}, "state": "open", "merged_at": None,
+                        "user": {"login": "author"}}
+            if "/reviews?" in path:
+                return []
             if "/actions/runs?" in path:
                 return {"total_count": 1, "workflow_runs": [
                     {"head_sha": "b" * 40, "status": "completed", "conclusion": "success"}
                 ]}
             raise AssertionError(path)
         with patch.object(portfolio_status, "request", side_effect=fake_request):
-            state, head, ci = portfolio_status.foundation_pr_status("rulewitness", 82)
-        self.assertEqual((state, head, ci), ("open", sha, "unknown (no exact-SHA evidence)"))
+            state, head, ci, review = portfolio_status.foundation_pr_status("rulewitness", 82)
+        self.assertEqual((state, head, ci, review),
+                         ("open", sha, "unknown (no exact-SHA evidence)",
+                          "no head-SHA non-author approval observed"))
         self.assertIn("head_sha=" + sha, paths[1])
         self.assertIn("event=pull_request", paths[1])
 
@@ -96,6 +104,72 @@ class PortfolioStatusTests(unittest.TestCase):
         }):
             with self.assertRaises(ValueError):
                 portfolio_status.foundation_pr_status("estima", 13)
+
+
+    def test_review_observation_requires_current_head_and_non_author(self):
+        sha = "a" * 40
+        def review(login, state="APPROVED", commit=None, kind="User"):
+            return {"user": {"login": login, "type": kind}, "state": state,
+                    "commit_id": commit or sha}
+        summarize = portfolio_status.summarize_review_evidence
+        self.assertEqual(summarize([], sha, "author"),
+                         "no head-SHA non-author approval observed")
+        self.assertEqual(summarize([review("author"), review("ci[bot]", kind="Bot")],
+                                   sha, "author"),
+                         "no head-SHA non-author approval observed")
+        self.assertEqual(summarize([review("reviewer", commit="b" * 40)],
+                                   sha, "author"),
+                         "historical approvals only (not head-SHA)")
+        self.assertEqual(summarize([review("reviewer")], sha, "author"),
+                         "1 head-SHA non-author approval(s) observed (not acceptance)")
+        self.assertEqual(summarize([review("reviewer"),
+                                    review("reviewer", "DISMISSED")], sha, "author"),
+                         "no head-SHA non-author approval observed")
+        self.assertEqual(summarize([review("reviewer"),
+                                    review("second", "CHANGES_REQUESTED")], sha, "author"),
+                         "changes requested observed (not cleared)")
+        self.assertEqual(summarize([review("reviewer", "CHANGES_REQUESTED"),
+                                    review("reviewer")], sha, "author"),
+                         "1 head-SHA non-author approval(s) observed (not acceptance)")
+        with self.assertRaises(ValueError):
+            summarize([{"state": "APPROVED"}], sha, "author")
+        with self.assertRaises(ValueError):
+            summarize([], sha, None)
+
+    def test_review_pagination_never_truncates_approvals(self):
+        calls = []
+        def fake_request(path):
+            calls.append(path)
+            if "page=1" in path:
+                return [{"user": {"login": f"reviewer-{i}"}, "state": "COMMENTED"}
+                        for i in range(100)]
+            if "page=2" in path:
+                return [{"user": {"login": "reviewer"}, "state": "APPROVED",
+                         "commit_id": "a" * 40}]
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            reviews = portfolio_status.fetch_pr_reviews("vlovers/rulewitness", 82)
+        self.assertEqual(len(reviews), 101)
+        self.assertEqual(len(calls), 2)
+        with patch.object(portfolio_status, "request", return_value={"not": "a list"}):
+            with self.assertRaises(ValueError):
+                portfolio_status.fetch_pr_reviews("vlovers/rulewitness", 82)
+
+    def test_report_fails_closed_when_review_lookup_fails(self):
+        sha = "a" * 40
+        def fake_request(path):
+            if path.endswith("/pulls/82"):
+                return {"head": {"sha": sha}, "state": "open",
+                        "user": {"login": "author"}}
+            if "/actions/runs?" in path:
+                return {"total_count": 1, "workflow_runs": [
+                    {"head_sha": sha, "status": "completed", "conclusion": "success"}]}
+            if "/reviews?" in path:
+                raise TimeoutError("Review API unavailable")
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            with self.assertRaises(TimeoutError):
+                portfolio_status.foundation_pr_status("rulewitness", 82)
 
 
 if __name__ == "__main__":

@@ -54,8 +54,8 @@ jobs:
           if test -s portfolio-snapshot.json; then
             python3 scripts/portfolio_history.py portfolio-snapshot.json --history portfolio-history.json
           fi
-      - name: Upload snapshot even when some GitHub queries fail
-        if: always()
+      - name: Upload complete snapshot and history
+        if: ${{ always() && steps.restore_history.outcome == 'success' && hashFiles('portfolio-history.json') != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: engineering-portfolio-snapshot
@@ -63,5 +63,15 @@ jobs:
             portfolio-snapshot.json
             portfolio-dashboard.md
             portfolio-history.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload diagnostic snapshot without history
+        if: ${{ always() && hashFiles('portfolio-history.json') == '' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: engineering-portfolio-diagnostic
+          path: |
+            portfolio-snapshot.json
+            portfolio-dashboard.md
           if-no-files-found: warn
           retention-days: 14

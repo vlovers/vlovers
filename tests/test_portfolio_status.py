@@ -11,21 +11,27 @@ from scripts import portfolio_status
 class PortfolioStatusTests(unittest.TestCase):
     def test_counts_issues_without_pull_requests_and_handles_missing_release(self):
         def fake_request(path):
-            if "/issues?" in path:
+            if path.endswith("/commits/main"):
+                return {"sha": "a" * 40}
+            if path.endswith("/releases/latest"):
+                return {"tag_name": "v1.2.3"}
+            if path.endswith("/issues") or "/issues?" in path:
                 if "page=1" in path:
                     return [{"number": 1}, {"number": 2, "pull_request": {}}]
                 return []
             if "/pulls?" in path:
                 return [{"number": 2}]
-            if "/releases/latest" in path:
-                return {"tag_name": "v1.2.3"}
+            if path.endswith("/pulls"):
+                return []
+            if path.startswith("/repos/") and "?" not in path and "/commits/" not in path:
+                return {"default_branch": "main"}
             raise AssertionError(path)
 
         output = io.StringIO()
         with patch.object(portfolio_status, "request", side_effect=fake_request):
             with contextlib.redirect_stdout(output):
                 self.assertEqual(portfolio_status.main(), 0)
-        self.assertIn("| 1 | 1 | v1.2.3 |", output.getvalue())
+        self.assertIn("| [aaaaaaaaaa](https://github.com/vlovers/grid-atlas/commit/" + "a" * 40 + ") | 1 | 1 | v1.2.3 |", output.getvalue())
         self.assertNotIn("Frostline", output.getvalue())
 
     def test_fails_closed_on_api_errors(self):
@@ -36,7 +42,7 @@ class PortfolioStatusTests(unittest.TestCase):
             with contextlib.redirect_stdout(io.StringIO()) as output:
                 with contextlib.redirect_stderr(io.StringIO()):
                     self.assertEqual(portfolio_status.main(), 1)
-        self.assertIn("| unknown | unknown | unknown |", output.getvalue())
+        self.assertIn("| unknown | unknown | unknown | unknown |", output.getvalue())
 
 
 if __name__ == "__main__":

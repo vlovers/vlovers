@@ -107,3 +107,5 @@ The offline Markdown renderer validates scalar attention categories and dependen
 Known changed-file overlap warnings distinguish two open PRs from pairs containing a closed PR (integration scope must be re-evaluated), a merged PR (re-audit against the new base), or unknown/invalid PR state (no manual-reconciliation conclusion). Dependency and overlap renderers reject nonpositive PR identifiers.
 
 History continuity safety: the scheduled workflow appends a new history entry only if restoration of the prior artifact succeeded (including the explicit first-run/no-artifact case). A restore error prevents the append step, avoiding a silent history reset; diagnostic snapshot/dashboard artifacts may still upload, and the workflow reports the failure.
+
+History artifact discovery validates candidate artifact IDs, originating run IDs and parseable creation timestamps before ordering candidates. Invalid candidates are skipped, and the current run is excluded; a candidate's presence alone does not certify that its ZIP contains valid history (that is checked separately).

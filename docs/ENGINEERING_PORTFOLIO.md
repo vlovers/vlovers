@@ -59,3 +59,7 @@ At each iteration: read fresh status, revisit issue criteria, choose one cohesiv
 ### Mergeability evidence policy
 
 GitHub's `mergeable` value is a point-in-time computation and may flip as its mergeability calculation completes. When it is `false`, repeat the query and inspect the reverse `PR head...base` comparison, changed-file overlap, and the exact-head Actions results before labeling the issue a persistent conflict. A successful CI run on a PR head does not certify the final merge commit, and `mergeable=true` does not replace independent review or branch rules.
+
+### Daily history persistence
+
+The scheduled workflow restores the most recent unexpired `engineering-portfolio-snapshot` artifact using the read-only Actions API, appends the current run to `portfolio-history.json`, and uploads it again. This is **artifact-backed rolling history**, not permanent storage: artifacts expire after 14 days, and a gap longer than retention starts a fresh history. The first run also starts fresh. Restoration failures fail the history step rather than silently pretending continuity. No GitHub write token or repository commits are required. Verify behavior with a manual `workflow_dispatch` run after the workflow reaches the default branch.

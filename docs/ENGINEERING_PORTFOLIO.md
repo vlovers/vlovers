@@ -101,3 +101,5 @@ Attention triage checks evidence types before comparing CI, review, or mergeabil
 Actions lifecycle metadata is validated for consistency: a completed workflow must carry a terminal conclusion, while queued/in-progress/waiting workflows must not already carry one. Contradictory observations fail validation rather than being presented as green or pending evidence.
 
 Exact-head Actions verification requires a valid 40-character hexadecimal target commit SHA before any workflow run is considered. Missing, abbreviated, or malformed target SHAs raise validation errors rather than producing a misleading observation.
+
+The offline Markdown renderer validates scalar attention categories and dependency states before membership checks. Malformed list/object values produce explicit validation errors rather than an unhandled type exception or misleading report.

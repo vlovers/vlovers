@@ -17,6 +17,15 @@ REPOSITORIES = (
     "estima",
 )
 BASE = "https://api.github.com"
+# Existing baseline PRs only. This is a read-only review queue, not a merge queue.
+FOUNDATION_PRS = (
+    ("grid-atlas", 268),
+    ("ai-office", 43),
+    ("rulewitness", 82),
+    ("mutation-boundary", 68),
+    ("estima", 13),
+    ("vlovers", 2),
+)
 
 
 def request(path):
@@ -31,6 +40,37 @@ def request(path):
     req = urllib.request.Request(BASE + path, headers=headers)
     with urllib.request.urlopen(req, timeout=20) as response:
         return json.load(response)
+
+
+
+def summarize_workflow_runs(response, expected_sha):
+    """Conservative observation of PR workflow runs, not required-check certification."""
+    runs = response.get("workflow_runs", [])
+    if response.get("total_count", len(runs)) > len(runs):
+        return "unknown (incomplete Actions pagination)"
+    if not runs or any(run.get("head_sha") != expected_sha for run in runs):
+        return "unknown (no exact-SHA evidence)"
+    failed = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
+    if any(run.get("conclusion") in failed for run in runs):
+        return "failure observed"
+    if any(run.get("status") != "completed" for run in runs):
+        return "pending"
+    if all(run.get("conclusion") == "success" for run in runs):
+        return f"{len(runs)}/{len(runs)} observed success"
+    return "unknown (non-success conclusion)"
+
+
+def foundation_pr_status(name, number):
+    repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
+    pr = request(f"/repos/{repo}/pulls/{number}")
+    sha = pr["head"]["sha"]
+    if len(sha) != 40 or any(char not in "0123456789abcdef" for char in sha.lower()):
+        raise ValueError("Invalid PR head SHA")
+    state = "merged" if pr.get("merged_at") else pr["state"]
+    runs = request(
+        f"/repos/{repo}/actions/runs?event=pull_request&head_sha={sha}&per_page=100"
+    )
+    return state, sha, summarize_workflow_runs(runs, sha)
 
 
 def main():
@@ -75,8 +115,25 @@ def main():
             print(f"| {name} | unknown | unknown | unknown | unknown |")
             print(f"Warning: could not read {name}: {exc}", file=sys.stderr)
             errors += 1
+
+    print("\n## Foundation PRs — exact head SHA and observed PR Actions")
+    print("| Repository / PR | State | Head SHA | Observed PR workflow runs |")
+    print("| --- | --- | --- | --- |")
+    for name, number in FOUNDATION_PRS:
+        label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
+        try:
+            state, sha, ci = foundation_pr_status(name, number)
+            print(f"| {label} | {state} | `{sha[:12]}` | {ci} |")
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+            print(f"| {label} | unknown | unknown | unknown |")
+            print(f"Warning: could not read foundation PR {name} #{number}: {exc}", file=sys.stderr)
+            errors += 1
+    print(
+        "\nObserved Actions are **not** required-check, branch-rule, independent-review, "
+        "product-acceptance or release evidence. Unknown never means pass."
+    )
     if errors:
-        print(f"\n{errors} repository queries failed; do not treat unknown as zero.", file=sys.stderr)
+        print(f"\n{errors} GitHub queries failed; do not treat unknown as zero or green.", file=sys.stderr)
         return 1
     return 0
 

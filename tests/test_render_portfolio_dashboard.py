@@ -38,6 +38,20 @@ class DashboardTests(unittest.TestCase):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 render(snapshot)
 
+
+    def test_dependency_order_is_advisory_and_tracks_merged_predecessor(self):
+        from scripts.render_portfolio_dashboard import dependency_rows
+        rows = dependency_rows([
+            {"repository": "vlovers/ai-office", "number": 43, "state": "merged"},
+            {"repository": "vlovers/ai-office", "number": 48, "state": "open"},
+        ])
+        self.assertTrue(any("ai-office#48" in row and "predecessor #43 merged" in row
+                            for row in rows))
+        self.assertTrue(any("ai-office#49" in row and "await predecessor #48 (open)" in row
+                            for row in rows))
+        self.assertTrue(any("mutation-boundary#70" in row and "unknown" in row
+                            for row in rows))
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

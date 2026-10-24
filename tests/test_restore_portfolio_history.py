@@ -43,6 +43,15 @@ class RestoreHistoryTests(unittest.TestCase):
         ]}
         self.assertEqual(select_previous_artifact(payload, 10), None)
 
+    def test_rejects_invalid_utc_timestamp(self):
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("portfolio-history.json", json.dumps([
+                {"observed_at": "2026-99-24T00:00:00Z"},
+            ]))
+        with self.assertRaises(ValueError):
+            extract_history(buffer.getvalue())
+
     def test_rejects_missing_history(self):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:

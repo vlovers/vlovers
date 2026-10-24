@@ -11,6 +11,16 @@ from scripts import portfolio_status
 class PortfolioStatusTests(unittest.TestCase):
 
 
+
+    def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
+        import datetime
+        now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)
+        self.assertEqual(portfolio_status.pr_age_days("2026-10-20T12:00:00Z", now), 4)
+        self.assertEqual(portfolio_status.pr_age_days("2026-10-24T11:59:59+00:00", now), 0)
+        for invalid in (None, "2026-10-20", "not-a-date", "2026-10-25T12:00:00Z"):
+            with self.assertRaises(ValueError):
+                portfolio_status.pr_age_days(invalid, now)
+
     def test_attention_triage_never_claims_merge_clearance(self):
         base = {"state": "open", "head_sha": "a" * 40,
                 "workflow_observation": "1/1 observed success",
@@ -44,6 +54,7 @@ class PortfolioStatusTests(unittest.TestCase):
                 return []
             if "/pulls/" in path:
                 return {"head": {"sha": sha}, "state": "open", "merged_at": None,
+                        "updated_at": "2026-10-20T12:00:00Z",
                         "user": {"login": "author"}, "mergeable": True}
             if "/commits/main" in path:
                 return {"sha": sha}
@@ -64,6 +75,7 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(snapshot["repositories"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["attention"], "review_needed")
+        self.assertIsInstance(snapshot["tracked_prs"][0]["days_since_update"], int)
         self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
                          "1/1 observed success")
 

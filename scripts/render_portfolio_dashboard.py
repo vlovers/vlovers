@@ -102,6 +102,14 @@ def render(snapshot):
     errors = snapshot.get("errors")
     if not isinstance(prs, list) or not isinstance(repos, list) or not isinstance(errors, list):
         raise ValueError("Malformed snapshot collections")
+    seen_prs = set()
+    for item in prs:
+        if not isinstance(item, dict):
+            raise ValueError("Malformed PR record")
+        key = (item.get("repository"), item.get("number"))
+        if key in seen_prs:
+            raise ValueError("Duplicate PR in snapshot")
+        seen_prs.add(key)
     lines = ["# Engineering portfolio dashboard", "",
              "Read-only GitHub observations. **Never merge or release based on this report.**", "",
              f"Repositories: {len(repos)} · Tracked PRs: {len(prs)} · Query errors: {len(errors)}", "",

@@ -202,3 +202,25 @@ Fresh GraphQL review-submission inspection of all **14 open engineering PRs** (1
 | Central dashboard | #2 after reviewer acceptance | Read-only report and offline tests; do not mistake mergeability or observed CI for ruleset compliance |
 
 **Before each merge:** inspect the current base-to-head diff and unexpected paths; obtain the appropriate reviewer decision; verify branch protection/required checks through repository settings; confirm the exact current head SHA and Actions conclusions; integrate one PR at a time; then refresh the next PR's base comparison and rerun its CI if its branch changes. Do not batch-merge all PRs based on historical CI. No PRs were merged or review approvals fabricated during this audit.
+
+
+## Operational ownership and Last Chapter onboarding — 2026-10-24
+
+**Scope boundary:** this portfolio workstream owns engineering governance only: repository instructions, agent handoffs, documentation, issue/PR templates, CI security, review gates, and read-only status reporting. Product UI, stories, gameplay, content, and product defects belong to each product's delivery workstream. An observed product CI failure may be recorded as a blocking dependency; do not fix product code or open product issues from this workstream without explicit direction.
+
+### Last Chapter bootstrap acceptance — [draft PR #5](https://github.com/vlovers/last-chapter/pull/5)
+
+The new repository has a minimal `main` README, and draft PR #5 proposes agent instructions, engineering docs, GitHub templates, and a pinned CI workflow **alongside product prototype files**. Treat the latter as product-owned; engineering review does not certify the game's narrative or implementation.
+
+The exact-head `quality` run on `3ae5141f781cb36e272ce0f7be7c0ace5b131704` failed during Prettier: `src/main.ts:31` has an unescaped apostrophe in a single-quoted Ukrainian string; several files also fail formatting. The draft description acknowledges missing `package-lock.json`, temporary `npm install`, and incomplete verification. [Issue #1](https://github.com/vlovers/last-chapter/issues/1) is the toolchain/CI acceptance dependency. The implementation owner must address product-code syntax and formatting; governance only rechecks evidence.
+
+**Review gates:** committed lockfile; CI uses `npm ci`; formatter, lint, typecheck, unit tests and build succeed on the **same head SHA**; pinned Actions and least-privilege permissions remain; `AGENTS.md`, security reporting, issue/PR templates and documentation agree; draft becomes ready only after author review. Do not merge while the draft is failing.
+
+### Active CI observations, not blanket readiness
+
+- [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272), head `80f7f414864c`: the new biography workflow is pinned and mergeability was observed as `true`, but the `visual-accessibility` job failed on Ukrainian `/constructors` at 200% font scaling in Chromium and WebKit. The product owner owns that regression; no UI/CSS changes belong in this CI-security PR. Other jobs were still running at the latest observation.
+- [Portfolio #2](https://github.com/vlovers/vlovers/pull/2), head `fa1797ac7815`: added Last Chapter to the repository and foundation-PR inventory with a regression assertion; Actions were queued at the latest observation. Recheck after completion.
+
+### Agent work handoff contract
+
+For each agent task, record: **owner / repository / base branch / scoped paths / issue / acceptance criteria / required checks / dependencies / non-goals / handoff artifacts**. One agent owns each overlapping file set at a time. Agents must not merge, release, publish, delete branches, force-push, weaken checks, or change secrets without explicit authorization. An agent's `done` means evidence-backed PR readiness, not product acceptance or deployment. The coordinator tracks blockers and redirects product work to its owner rather than implementing it.

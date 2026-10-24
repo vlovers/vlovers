@@ -63,3 +63,5 @@ GitHub's `mergeable` value is a point-in-time computation and may flip as its me
 ### Daily history persistence
 
 The scheduled workflow restores the most recent unexpired `engineering-portfolio-snapshot` artifact using the read-only Actions API, appends the current run to `portfolio-history.json`, and uploads it again. This is **artifact-backed rolling history**, not permanent storage: artifacts expire after 14 days, and a gap longer than retention starts a fresh history. The first run also starts fresh. Restoration failures fail the history step rather than silently pretending continuity. No GitHub write token or repository commits are required. Verify behavior with a manual `workflow_dispatch` run after the workflow reaches the default branch.
+
+Artifact restoration checks up to five pages of recent Actions artifacts, excludes the current run and expired artifacts, and validates chronological order before reuse. If the repository produces more than 500 artifacts in the retention window, the search is bounded and may not find the oldest history; a longer-term archive would need separate storage and explicit approval.

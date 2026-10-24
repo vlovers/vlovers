@@ -18,11 +18,12 @@ def select_previous_artifact(payload, current_run_id):
         raise ValueError("Invalid artifacts payload")
     candidates = [
         a for a in artifacts
-        if a.get("name") == "engineering-portfolio-snapshot"
+        if isinstance(a, dict)
+        and a.get("name") == "engineering-portfolio-snapshot"
         and not a.get("expired")
         and isinstance(a.get("workflow_run"), dict)
         and a["workflow_run"].get("id") != current_run_id
-        and isinstance(a.get("id"), int)
+        and type(a.get("id")) is int
     ]
     return max(candidates, key=lambda a: (a.get("created_at") or "", a["id"]), default=None)
 
@@ -32,7 +33,7 @@ def extract_history(data):
         raise ValueError("Artifact archive exceeds limit")
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         members = [m for m in archive.infolist() if m.filename == "portfolio-history.json"]
-        if len(members) != 1 or members[0].file_size > 1_000_000:
+        if len(members) != 1 or members[0].file_size > 1_000_000 or members[0].compress_size > 1_000_000:
             raise ValueError("Missing or oversized history in artifact")
         history = json.loads(archive.read(members[0]).decode("utf-8"))
         if not isinstance(history, list) or len(history) > 365:
@@ -75,7 +76,10 @@ def main():
                 (candidate.get("created_at") or "", candidate["id"]) >
                 (artifact.get("created_at") or "", artifact["id"])):
             artifact = candidate
-        if len(payload.get("artifacts", [])) < 100:
+        artifacts = payload.get("artifacts")
+        if not isinstance(artifacts, list) or len(artifacts) > 100:
+            raise ValueError("Invalid Actions artifact page")
+        if len(artifacts) < 100:
             break
     if artifact is None:
         print("No previous snapshot artifact; beginning new history.")

@@ -161,9 +161,23 @@ def fetch_pr_reviews(repo, number):
             return reviews
     raise ValueError("PR review pagination exceeded safety limit")
 
-def foundation_pr_status(name, number):
+def fetch_pr_metadata(name, number, cache=None):
+    """Reuse PR metadata within one report run; never persist it across runs."""
+    key = (name, number)
+    if cache is not None and key in cache:
+        return cache[key]
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
     pr = request(f"/repos/{repo}/pulls/{number}")
+    if not isinstance(pr, dict):
+        raise ValueError("Malformed PR metadata")
+    if cache is not None:
+        cache[key] = pr
+    return pr
+
+
+def foundation_pr_status(name, number, pr_cache=None):
+    repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
+    pr = fetch_pr_metadata(name, number, pr_cache)
     sha = validate_sha(pr["head"]["sha"])
     state = "merged" if pr.get("merged_at") else pr["state"]
     if state not in {"open", "closed", "merged"}:
@@ -176,7 +190,7 @@ def foundation_pr_status(name, number):
     return state, sha, summarize_workflow_runs(runs, sha), review
 
 
-def render_pr_queue(title, entries, show_lane=False):
+def render_pr_queue(title, entries, show_lane=False, pr_cache=None):
     """Render a tracked queue; return count of failed lookups (unknown != green)."""
     errors = 0
     print(f"\n## {title}")
@@ -188,7 +202,7 @@ def render_pr_queue(title, entries, show_lane=False):
         lane = f" | {item[2]}" if show_lane else ""
         label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
         try:
-            state, sha, ci, review = foundation_pr_status(name, number)
+            state, sha, ci, review = foundation_pr_status(name, number, pr_cache)
             print(f"| {label}{lane} | {state} | `{sha[:12]}` | {ci} | {review} |")
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
             print(f"| {label}{lane} | unknown | unknown | unknown | unknown |")
@@ -219,10 +233,10 @@ def summarize_branch_divergence(compare):
     return f"base-only {base_only}; PR-only {pr_only} ({compare['status']})"
 
 
-def branch_drift_status(name, number):
+def branch_drift_status(name, number, pr_cache=None):
     """Compare PR HEAD against the *live named base ref*, not PR base.sha."""
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
-    pr = request(f"/repos/{repo}/pulls/{number}")
+    pr = fetch_pr_metadata(name, number, pr_cache)
     head = validate_sha(pr["head"]["sha"])
     base = pr["base"]["ref"]
     if not isinstance(base, str) or not base or "/" in base or any(
@@ -237,7 +251,7 @@ def branch_drift_status(name, number):
     return head, base, summarize_branch_divergence(compare)
 
 
-def render_branch_drift_queue():
+def render_branch_drift_queue(pr_cache=None):
     """Report integration risk without interpreting divergence as a merge conflict."""
     errors = 0
     print("\n## Engineering PR branch freshness — live base ref (not merge clearance)")
@@ -246,7 +260,7 @@ def render_branch_drift_queue():
     for name, number in BRANCH_DRIFT_PRS:
         label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
         try:
-            sha, base, status = branch_drift_status(name, number)
+            sha, base, status = branch_drift_status(name, number, pr_cache)
             print(f"| {label} | `{sha[:12]}` | `{base}` | {status} |")
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
                 TimeoutError, ValueError) as exc:
@@ -283,6 +297,7 @@ def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
 
 def main():
     errors = 0
+    pr_cache = {}
     print("# Portfolio GitHub status (live read-only query)\n")
     print("| Repository | Default branch HEAD | Open PRs | Open issues | Latest GitHub release |")
     print("| --- | --- | ---: | ---: | --- |")
@@ -311,9 +326,9 @@ def main():
             print(f"Warning: could not read {name}: {exc}", file=sys.stderr)
             errors += 1
 
-    errors += render_pr_queue("Foundation PRs — exact head SHA and observed PR Actions", FOUNDATION_PRS)
-    errors += render_pr_queue("Follow-up PRs — issue intake and CI security", FOLLOWUP_PRS, show_lane=True)
-    errors += render_branch_drift_queue()
+    errors += render_pr_queue("Foundation PRs — exact head SHA and observed PR Actions", FOUNDATION_PRS, pr_cache=pr_cache)
+    errors += render_pr_queue("Follow-up PRs — issue intake and CI security", FOLLOWUP_PRS, show_lane=True, pr_cache=pr_cache)
+    errors += render_branch_drift_queue(pr_cache)
     print(
         "\nObserved Actions and review submissions are **not** required-check, branch-rule, "
         "independent-review, product-acceptance, merge or release certification. "

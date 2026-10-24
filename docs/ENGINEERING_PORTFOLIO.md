@@ -1,6 +1,6 @@
 # Engineering portfolio — active projects
 
-**Engineering normalization:** see the [verified rollout audit, gap matrix and cleanup gates](ENGINEERING_ROLLOUT_AUDIT.md).
+**Engineering normalization:** see the [verified rollout audit, gap matrix and cleanup gates](ENGINEERING_ROLLOUT_AUDIT.md) and the [owner-ready branch protection setup guide](BRANCH_RULESET_SETUP.md).
 
 This is a **dated planning snapshot**, not live CI or release certification. Use the [refresh script](../scripts/portfolio_status.py) to retrieve current public GitHub state. The snapshot was assembled 2026-10-24 UTC. Never turn a passed source CI check into a claim of released functionality.
 

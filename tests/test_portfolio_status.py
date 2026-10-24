@@ -46,6 +46,32 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertIn("grid-atlas #272", output.getvalue())
         self.assertIn("estima #15", output.getvalue())
 
+    def test_issue_and_pr_pagination_counts_full_pages_and_filters_prs(self):
+        calls = []
+        def fake_request(path):
+            calls.append(path)
+            if path.endswith("page=1"):
+                return [{"number": i, **({"pull_request": {}} if i % 2 else {})}
+                        for i in range(100)]
+            if path.endswith("page=2"):
+                return [{"number": 101}]
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            self.assertEqual(portfolio_status.count_open_items("vlovers/grid-atlas", "issues", True), 51)
+            self.assertEqual(portfolio_status.count_open_items("vlovers/grid-atlas", "pulls"), 101)
+        self.assertEqual(len(calls), 4)
+
+    def test_listing_pagination_fails_closed_on_invalid_or_unbounded_responses(self):
+        for bad in (None, {}, [{"number": 1}, None]):
+            with self.subTest(bad=bad):
+                with patch.object(portfolio_status, "request", return_value=bad):
+                    with self.assertRaises(ValueError):
+                        portfolio_status.count_open_items("vlovers/estima", "issues")
+        with patch.object(portfolio_status, "request", return_value=[{}] * 100) as fetch:
+            with self.assertRaisesRegex(ValueError, "pagination exceeded"):
+                portfolio_status.count_open_items("vlovers/estima", "pulls")
+        self.assertEqual(fetch.call_count, 20)
+
     def test_fails_closed_on_api_errors(self):
         def fail(_path):
             raise TimeoutError("API unavailable")

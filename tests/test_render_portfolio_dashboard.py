@@ -44,11 +44,11 @@ class DashboardTests(unittest.TestCase):
         from scripts.render_portfolio_dashboard import overlap_rows
         rows = overlap_rows([
             {"repository": "vlovers/mutation-boundary", "number": 68, "state": "open",
-             "head_sha": "d901cc8869" + "0" * 30},
+             "head_sha": "d901cc88697a0e3008f866d32b6385f17342d52d"},
             {"repository": "vlovers/mutation-boundary", "number": 69, "state": "open",
-             "head_sha": "8b830e3fe6" + "0" * 30},
+             "head_sha": "8b830e3fe622d52bf4d3bdc47803d526c8b95e99"},
             {"repository": "vlovers/mutation-boundary", "number": 70, "state": "open",
-             "head_sha": "4e67f8b95c" + "0" * 30},
+             "head_sha": "4e67f8b95c539145dd5516fafdfd2d250f43d9f8"},
         ])
         self.assertEqual(len(rows), 2)
         self.assertTrue(any("CONTRIBUTING.md" in row and "manual reconciliation required" in row

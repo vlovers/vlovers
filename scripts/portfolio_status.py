@@ -27,6 +27,20 @@ FOUNDATION_PRS = (
     ("vlovers", 2),
 )
 
+# Separate review lanes: intake and CI/supply-chain changes remain unmerged until
+# their own review and required checks. Tracking a PR is not an authorization.
+FOLLOWUP_PRS = (
+    ("grid-atlas", 271, "issue intake"),
+    ("grid-atlas", 272, "CI security"),
+    ("ai-office", 48, "issue intake"),
+    ("ai-office", 49, "CI security"),
+    ("rulewitness", 83, "issue intake"),
+    ("mutation-boundary", 69, "issue intake"),
+    ("mutation-boundary", 70, "CI security"),
+    ("estima", 14, "issue intake"),
+    ("estima", 15, "CI security"),
+)
+
 
 def request(path):
     headers = {
@@ -45,9 +59,16 @@ def request(path):
 
 def summarize_workflow_runs(response, expected_sha):
     """Conservative observation of PR workflow runs, not required-check certification."""
-    runs = response.get("workflow_runs", [])
-    if response.get("total_count", len(runs)) > len(runs):
+    if not isinstance(response, dict):
+        raise ValueError("Malformed Actions response")
+    runs = response.get("workflow_runs")
+    total = response.get("total_count")
+    if not isinstance(runs, list) or not isinstance(total, int) or total < len(runs):
+        raise ValueError("Malformed Actions pagination metadata")
+    if total > len(runs):
         return "unknown (incomplete Actions pagination)"
+    if any(not isinstance(run, dict) for run in runs):
+        raise ValueError("Malformed Actions run")
     if not runs or any(run.get("head_sha") != expected_sha for run in runs):
         return "unknown (no exact-SHA evidence)"
     failed = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
@@ -108,12 +129,35 @@ def foundation_pr_status(name, number):
     if len(sha) != 40 or any(char not in "0123456789abcdef" for char in sha.lower()):
         raise ValueError("Invalid PR head SHA")
     state = "merged" if pr.get("merged_at") else pr["state"]
+    if state not in {"open", "closed", "merged"}:
+        raise ValueError("Unexpected PR state")
     runs = request(
         f"/repos/{repo}/actions/runs?event=pull_request&head_sha={sha}&per_page=100"
     )
     author_login = (pr.get("user") or {}).get("login")
     review = summarize_review_evidence(fetch_pr_reviews(repo, number), sha, author_login)
     return state, sha, summarize_workflow_runs(runs, sha), review
+
+
+def render_pr_queue(title, entries, show_lane=False):
+    """Render a tracked queue; return count of failed lookups (unknown != green)."""
+    errors = 0
+    print(f"\\n## {title}")
+    lane_column = " | Lane" if show_lane else ""
+    print(f"| Repository / PR{lane_column} | State | Head SHA | Observed PR workflow runs | Review observation |")
+    print("| ---" + (" | ---" if show_lane else "") + " | --- | --- | --- | --- |")
+    for item in entries:
+        name, number = item[:2]
+        lane = f" | {item[2]}" if show_lane else ""
+        label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
+        try:
+            state, sha, ci, review = foundation_pr_status(name, number)
+            print(f"| {label}{lane} | {state} | `{sha[:12]}` | {ci} | {review} |")
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+            print(f"| {label}{lane} | unknown | unknown | unknown | unknown |")
+            print(f"Warning: could not read tracked PR {name} #{number}: {exc}", file=sys.stderr)
+            errors += 1
+    return errors
 
 
 def main():
@@ -154,23 +198,13 @@ def main():
                     raise
                 release = "none"
             print(f"| [{name}](https://github.com/{OWNER}/{name}) | {head} | {pr_count} | {issue_count} | {release} |")
-        except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
             print(f"| {name} | unknown | unknown | unknown | unknown |")
             print(f"Warning: could not read {name}: {exc}", file=sys.stderr)
             errors += 1
 
-    print("\n## Foundation PRs — exact head SHA and observed PR Actions")
-    print("| Repository / PR | State | Head SHA | Observed PR workflow runs | Review observation |")
-    print("| --- | --- | --- | --- | --- |")
-    for name, number in FOUNDATION_PRS:
-        label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
-        try:
-            state, sha, ci, review = foundation_pr_status(name, number)
-            print(f"| {label} | {state} | `{sha[:12]}` | {ci} | {review} |")
-        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
-            print(f"| {label} | unknown | unknown | unknown | unknown |")
-            print(f"Warning: could not read foundation PR {name} #{number}: {exc}", file=sys.stderr)
-            errors += 1
+    errors += render_pr_queue("Foundation PRs — exact head SHA and observed PR Actions", FOUNDATION_PRS)
+    errors += render_pr_queue("Follow-up PRs — issue intake and CI security", FOLLOWUP_PRS, show_lane=True)
     print(
         "\nObserved Actions and review submissions are **not** required-check, branch-rule, "
         "independent-review, product-acceptance, merge or release certification. "

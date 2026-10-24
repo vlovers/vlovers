@@ -39,6 +39,8 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(classify(dict(base, workflow_observation="pending")), "ci_pending")
         self.assertEqual(classify(dict(base, workflow_observation="unknown (no exact-SHA evidence)")),
                          "unknown")
+        self.assertEqual(classify(dict(base, review_observation=None)), "unknown")
+        self.assertEqual(classify(dict(base, review_observation="unexpected review response")), "unknown")
         self.assertEqual(classify(dict(base, state=None, head_sha=None)), "unknown")
         self.assertEqual(classify(dict(base, state="merged")), "closed")
         self.assertEqual(classify(dict(base, review_observation="1 head-SHA non-author approval(s) observed (not acceptance)")),

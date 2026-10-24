@@ -7,6 +7,7 @@ import sys
 
 ATTENTION = {
     "ci_failure": "CI failure",
+    "action_required": "Actions approval/action required",
     "changes_requested": "Changes requested",
     "integration_blocker": "Integration blocker",
     "ci_pending": "CI pending",

@@ -69,3 +69,7 @@ Artifact restoration checks up to five pages of recent Actions artifacts, exclud
 ### Audited overlap evidence freshness
 
 Known changed-file overlaps are explicitly pinned to the full 40-character PR head SHAs observed during the audit. The Markdown renderer marks an overlap audit **stale** if either PR head changes, **unknown** if its SHA is unavailable, and **re-audit against new base** if either PR was merged. This is not live overlap discovery and must never be interpreted as conflict clearance. Recompute changed-file lists and update audited SHAs after every head change.
+
+### Actions approval gates
+
+The snapshot distinguishes `action required observed` from `failure observed`. An `action_required` workflow conclusion is an unresolved GitHub Actions gate, **not** evidence that tests executed and failed. It receives its own dashboard attention category; neither condition counts as successful current-head CI. Inspect the run and GitHub's workflow approval controls before asking an agent to change code.

@@ -160,6 +160,70 @@ def render_pr_queue(title, entries, show_lane=False):
     return errors
 
 
+# A small targeted drift queue: these AI Office documentation/security PRs were
+# based on older main commits. Do not use the PR's base.sha as the current base
+# tip: it may describe the historical merge base rather than today's main.
+BRANCH_DRIFT_PRS = (
+    ("ai-office", 43),
+    ("ai-office", 48),
+    ("ai-office", 49),
+)
+
+
+def summarize_branch_divergence(compare):
+    """Count commits unique to live base vs PR; this is NOT conflict detection."""
+    if not isinstance(compare, dict):
+        raise ValueError("Malformed compare response")
+    if compare.get("status") not in {"identical", "ahead", "behind", "diverged"}:
+        raise ValueError("Unexpected compare status")
+    base_only = compare.get("ahead_by")
+    pr_only = compare.get("behind_by")
+    if any(type(value) is not int or value < 0 for value in (base_only, pr_only)):
+        raise ValueError("Invalid compare commit counts")
+    return f"base-only {base_only}; PR-only {pr_only} ({compare['status']})"
+
+
+def branch_drift_status(name, number):
+    """Compare PR HEAD against the *live named base ref*, not PR base.sha."""
+    repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
+    pr = request(f"/repos/{repo}/pulls/{number}")
+    head = pr["head"]["sha"]
+    base = pr["base"]["ref"]
+    if not isinstance(head, str) or len(head) != 40 or any(
+        char not in "0123456789abcdef" for char in head.lower()
+    ):
+        raise ValueError("Invalid PR head SHA for compare")
+    if not isinstance(base, str) or not base or "/" in base or any(
+        char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-" for char in base
+    ):
+        raise ValueError("Invalid PR base ref for compare")
+    # HEAD...BASE: ahead_by counts commits unique to the base; behind_by
+    # counts commits unique to the PR. The base ref resolves at query time.
+    compare = request(
+        f"/repos/{repo}/compare/{head}...{urllib.parse.quote(base, safe='')}"
+    )
+    return head, base, summarize_branch_divergence(compare)
+
+
+def render_branch_drift_queue():
+    """Report integration risk without interpreting divergence as a merge conflict."""
+    errors = 0
+    print("\\n## AI Office branch freshness — live base ref (not merge clearance)")
+    print("| PR | Head SHA | Base branch | Commit divergence |")
+    print("| --- | --- | --- | --- |")
+    for name, number in BRANCH_DRIFT_PRS:
+        label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
+        try:
+            sha, base, status = branch_drift_status(name, number)
+            print(f"| {label} | `{sha[:12]}` | `{base}` | {status} |")
+        except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
+                TimeoutError, ValueError) as exc:
+            print(f"| {label} | unknown | unknown | unknown |")
+            print(f"Warning: could not compare {name} #{number}: {exc}", file=sys.stderr)
+            errors += 1
+    return errors
+
+
 def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
     """Count all pages conservatively; never silently truncate a large queue."""
     count = 0
@@ -203,6 +267,7 @@ def main():
 
     errors += render_pr_queue("Foundation PRs — exact head SHA and observed PR Actions", FOUNDATION_PRS)
     errors += render_pr_queue("Follow-up PRs — issue intake and CI security", FOLLOWUP_PRS, show_lane=True)
+    errors += render_branch_drift_queue()
     print(
         "\nObserved Actions and review submissions are **not** required-check, branch-rule, "
         "independent-review, product-acceptance, merge or release certification. "

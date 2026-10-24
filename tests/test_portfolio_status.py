@@ -49,6 +49,38 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertIn("grid-atlas #272", output.getvalue())
         self.assertIn("estima #15", output.getvalue())
 
+    def test_pr_metadata_cache_is_scoped_and_reused_for_drift(self):
+        sha = "b" * 40
+        calls = []
+
+        def fake_request(path):
+            calls.append(path)
+            if "/pulls/49" in path and "/reviews?" not in path:
+                return {"head": {"sha": sha}, "base": {"ref": "main"},
+                        "state": "open", "merged_at": None, "user": {"login": "author"}}
+            if "/actions/runs?" in path:
+                return {"total_count": 1, "workflow_runs": [
+                    {"head_sha": sha, "status": "completed", "conclusion": "success"}
+                ]}
+            if "/reviews?" in path:
+                return []
+            if "/compare/" in path:
+                return {"status": "diverged", "ahead_by": 17, "behind_by": 15}
+            raise AssertionError(path)
+
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            cache = {}
+            self.assertEqual(portfolio_status.foundation_pr_status("ai-office", 49, cache)[0], "open")
+            self.assertEqual(portfolio_status.branch_drift_status("ai-office", 49, cache)[1], "main")
+            self.assertEqual(
+                len([path for path in calls if path.endswith("/pulls/49")]), 1
+            )
+            # A fresh report gets a fresh cache, not yesterday's PR head.
+            portfolio_status.branch_drift_status("ai-office", 49, {})
+            self.assertEqual(
+                len([path for path in calls if path.endswith("/pulls/49")]), 2
+            )
+
     def test_issue_and_pr_pagination_counts_full_pages_and_filters_prs(self):
         calls = []
         def fake_request(path):

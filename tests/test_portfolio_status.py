@@ -10,6 +10,28 @@ from scripts import portfolio_status
 
 class PortfolioStatusTests(unittest.TestCase):
 
+
+    def test_attention_triage_never_claims_merge_clearance(self):
+        base = {"state": "open", "head_sha": "a" * 40,
+                "workflow_observation": "1/1 observed success",
+                "review_observation": "no head-SHA non-author approval observed",
+                "mergeability_observation": "mergeable observed (not clearance)"}
+        classify = portfolio_status.classify_pr_attention
+        self.assertEqual(classify(base), "review_needed")
+        self.assertEqual(classify(dict(base, workflow_observation="failure observed")),
+                         "ci_failure")
+        self.assertEqual(classify(dict(base, review_observation="changes requested observed (not cleared)")),
+                         "changes_requested")
+        self.assertEqual(classify(dict(base, mergeability_observation="not mergeable observed (investigate)")),
+                         "integration_blocker")
+        self.assertEqual(classify(dict(base, workflow_observation="pending")), "ci_pending")
+        self.assertEqual(classify(dict(base, workflow_observation="unknown (no exact-SHA evidence)")),
+                         "unknown")
+        self.assertEqual(classify(dict(base, state=None, head_sha=None)), "unknown")
+        self.assertEqual(classify(dict(base, state="merged")), "closed")
+        self.assertEqual(classify(dict(base, review_observation="1 head-SHA non-author approval(s) observed (not acceptance)")),
+                         "review_observed_not_authorized")
+
     def test_json_snapshot_has_stable_schema_and_exact_sha_observations(self):
         sha = "a" * 40
 
@@ -41,6 +63,7 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(len(snapshot["tracked_prs"]), 16)
         self.assertEqual(snapshot["repositories"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["head_sha"], sha)
+        self.assertEqual(snapshot["tracked_prs"][0]["attention"], "review_needed")
         self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
                          "1/1 observed success")
 

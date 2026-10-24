@@ -21,6 +21,19 @@ class PortfolioStatusTests(unittest.TestCase):
             self.assertEqual(portfolio_status.classify_pr_attention(
                 dict(base, review_observation=invalid)), "unknown")
 
+    def test_incomplete_pr_identity_cannot_be_review_ready(self):
+        classify = portfolio_status.classify_pr_attention
+        valid = {"state": "open", "head_sha": "a" * 40,
+                 "workflow_observation": "1/1 observed success",
+                 "review_observation": "no head-SHA non-author approval observed",
+                 "mergeability_observation": "mergeable observed (not clearance)"}
+        for record in (None, [], {}, {"state": "open"},
+                       dict(valid, head_sha=None),
+                       dict(valid, head_sha="not-a-sha"),
+                       dict(valid, head_sha=[]),
+                       dict(valid, state="unexpected")):
+            self.assertEqual(classify(record), "unknown")
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

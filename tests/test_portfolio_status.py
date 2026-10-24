@@ -140,10 +140,10 @@ class PortfolioStatusTests(unittest.TestCase):
         calls = []
         def fake_request(path):
             calls.append(path)
-            if "page=1" in path:
+            if path.endswith("&page=1"):
                 return [{"user": {"login": f"reviewer-{i}"}, "state": "COMMENTED"}
                         for i in range(100)]
-            if "page=2" in path:
+            if path.endswith("&page=2"):
                 return [{"user": {"login": "reviewer"}, "state": "APPROVED",
                          "commit_id": "a" * 40}]
             raise AssertionError(path)

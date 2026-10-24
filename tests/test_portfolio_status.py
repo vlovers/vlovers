@@ -308,6 +308,65 @@ class PortfolioStatusTests(unittest.TestCase):
                 self.assertEqual(portfolio_status.render_branch_drift_queue(), 1)
         self.assertIn("| unknown | unknown | unknown |", output.getvalue())
 
+    def test_sha_validation_rejects_non_string_and_invalid_commit_ids(self):
+        validate = portfolio_status.validate_sha
+        self.assertEqual(validate("a" * 40), "a" * 40)
+        self.assertEqual(validate("A" * 40), "A" * 40)
+        for invalid in (None, True, 123, "a" * 39, "a" * 41, "g" * 40,
+                        "a" * 40 + "\\n", ["a" * 40]):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                validate(invalid)
+
+    def test_release_metadata_cannot_inject_markdown_rows(self):
+        sanitize = portfolio_status.safe_markdown_cell
+        self.assertEqual(sanitize("v1.2.3|untrusted"), r"v1.2.3\\|untrusted")
+        for invalid in (None, "", True, 123, "v1\\n| forged | pass |",
+                        "v1\\rforged", "x" * 256):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                sanitize(invalid)
+
+    def test_reviews_require_explicit_account_type_to_prevent_bot_approval(self):
+        sha = "a" * 40
+        summarize = portfolio_status.summarize_review_evidence
+        for kind in ("Bot", "Organization", "Mannequin"):
+            review = {"user": {"login": "other", "type": kind},
+                      "state": "APPROVED", "commit_id": sha}
+            self.assertEqual(summarize([review], sha, "author"),
+                             "no head-SHA non-author approval observed")
+        for kind in (None, "Unexpected", 42):
+            review = {"user": {"login": "other", "type": kind},
+                      "state": "APPROVED", "commit_id": sha}
+            with self.assertRaises(ValueError):
+                summarize([review], sha, "author")
+        with self.assertRaises(ValueError):
+            summarize([None], sha, "author")
+
+    def test_workflow_total_count_boolean_is_not_accepted_as_complete(self):
+        sha = "a" * 40
+        with self.assertRaises(ValueError):
+            portfolio_status.summarize_workflow_runs({
+                "total_count": True, "workflow_runs": [
+                    {"head_sha": sha, "status": "completed", "conclusion": "success"}
+                ]
+            }, sha)
+
+    def test_repository_metadata_validation_fails_closed(self):
+        def fake_request(path):
+            if path == "/repos/vlovers/estima":
+                return {"default_branch": "develop"}
+            if path.endswith("/commits/develop"):
+                return {"sha": "invalid"}
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "REPOSITORIES", ("estima",)), \\
+             patch.object(portfolio_status, "FOUNDATION_PRS", ()), \\
+             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \\
+             patch.object(portfolio_status, "BRANCH_DRIFT_PRS", ()), \\
+             patch.object(portfolio_status, "request", side_effect=fake_request):
+            with contextlib.redirect_stdout(io.StringIO()) as output, \\
+                 contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(portfolio_status.main(), 1)
+        self.assertIn("| estima | unknown | unknown | unknown | unknown |", output.getvalue())
+
     def test_rejects_malformed_workflow_metadata_instead_of_reporting_success(self):
         sha = "a" * 40
         summarize = portfolio_status.summarize_workflow_runs

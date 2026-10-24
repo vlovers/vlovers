@@ -66,9 +66,7 @@ def main():
     run_id = int(os.environ["GITHUB_RUN_ID"])
     if not all(repo.split("/")) or repo.count("/") != 1:
         raise ValueError("Invalid repository")
-    # Filter by the intended workflow, not an unrelated artifact with the same name.
-    endpoint = (f"https://api.github.com/repos/{repo}/actions/workflows/"
-                "portfolio-snapshot.yml/artifacts?per_page=100")
+    endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
     artifact = None
     for page in range(1, 6):
         payload = json.loads(api(f"{endpoint}&page={page}", token))

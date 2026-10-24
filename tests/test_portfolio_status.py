@@ -9,6 +9,51 @@ from scripts import portfolio_status
 
 
 class PortfolioStatusTests(unittest.TestCase):
+
+    def test_json_snapshot_has_stable_schema_and_exact_sha_observations(self):
+        sha = "a" * 40
+
+        def fake_request(path):
+            if "/actions/runs?" in path:
+                return {"total_count": 1, "workflow_runs": [
+                    {"head_sha": sha, "status": "completed", "conclusion": "success"}
+                ]}
+            if "/reviews?" in path:
+                return []
+            if "/pulls/" in path:
+                return {"head": {"sha": sha}, "state": "open", "merged_at": None,
+                        "user": {"login": "author"}, "mergeable": True}
+            if "/commits/main" in path:
+                return {"sha": sha}
+            if "/releases/latest" in path:
+                return {"tag_name": "v1.0.0"}
+            if "/issues?" in path or "/pulls?" in path:
+                return []
+            if path.startswith("/repos/"):
+                return {"default_branch": "main"}
+            raise AssertionError(path)
+
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            snapshot = portfolio_status.build_snapshot()
+        self.assertEqual(snapshot["schema_version"], 1)
+        self.assertEqual(snapshot["errors"], [])
+        self.assertEqual(len(snapshot["repositories"]), 6)
+        self.assertEqual(len(snapshot["tracked_prs"]), 16)
+        self.assertEqual(snapshot["repositories"][0]["head_sha"], sha)
+        self.assertEqual(snapshot["tracked_prs"][0]["head_sha"], sha)
+        self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
+                         "1/1 observed success")
+
+    def test_json_snapshot_fail_closed_when_github_unavailable(self):
+        with patch.object(portfolio_status, "request",
+                          side_effect=__import__("urllib").error.URLError("offline")):
+            snapshot = portfolio_status.build_snapshot()
+        self.assertEqual(len(snapshot["repositories"]), 6)
+        self.assertEqual(len(snapshot["tracked_prs"]), 16)
+        self.assertEqual(len(snapshot["errors"]), 22)
+        self.assertIsNone(snapshot["repositories"][0]["head_sha"])
+        self.assertIsNone(snapshot["tracked_prs"][0]["workflow_observation"])
+
     def test_counts_issues_without_pull_requests_and_handles_missing_release(self):
         def fake_request(path):
             if "/actions/runs?" in path:

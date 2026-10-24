@@ -54,9 +54,11 @@ def dependency_rows(prs):
 # Explicitly audited changed-file overlaps; update after PR head changes.
 KNOWN_FILE_OVERLAPS = (
     ("vlovers/mutation-boundary", 68, 69, ("CONTRIBUTING.md",),
-     "d901cc8869", "8b830e3fe6"),
+     "d901cc88697a0e3008f866d32b6385f17342d52d",
+     "8b830e3fe622d52bf4d3bdc47803d526c8b95e99"),
     ("vlovers/mutation-boundary", 68, 70, ("README.md", "docs/RELEASING.md"),
-     "d901cc8869", "4e67f8b95c"),
+     "d901cc88697a0e3008f866d32b6385f17342d52d",
+     "4e67f8b95c539145dd5516fafdfd2d250f43d9f8"),
 )
 
 
@@ -72,7 +74,7 @@ def overlap_rows(prs):
             status = "re-audit against new base"
         elif not isinstance(a.get("head_sha"), str) or not isinstance(b.get("head_sha"), str):
             status = "unknown (head SHA unavailable)"
-        elif not a["head_sha"].startswith(audited_first) or not b["head_sha"].startswith(audited_second):
+        elif a["head_sha"] != audited_first or b["head_sha"] != audited_second:
             status = "stale audit (PR head changed; re-audit files)"
         else:
             status = "manual reconciliation required (heads match audit)"

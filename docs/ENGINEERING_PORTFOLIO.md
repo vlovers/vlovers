@@ -97,3 +97,5 @@ PR attention classification also requires a recognized PR state and a valid full
 A successful Actions observation is eligible for review triage only when it has the canonical `N/N observed success` form with matching positive counts. Partial or inconsistent totals (for example `1/2 observed success`) remain `unknown`; this still does not certify required checks or authorize merging.
 
 Attention triage checks evidence types before comparing CI, review, or mergeability observations. Non-string CI/review observations never become review-ready; missing mergeability is still not an authorization to merge and must be checked independently.
+
+Actions lifecycle metadata is validated for consistency: a completed workflow must carry a terminal conclusion, while queued/in-progress/waiting workflows must not already carry one. Contradictory observations fail validation rather than being presented as green or pending evidence.

@@ -68,3 +68,19 @@ Before closing or deleting anything: inspect last code changes, linked PRs, acce
 ## Scope boundary
 
 **No new product features until P0 and critical P1 workflow foundations are accepted.** Risky data/security issues can still be addressed as incident fixes, separately from feature work.
+
+## Intake and CI hardening queue — verified 2026-10-24
+
+These are **separate proposed PRs**, not deployed default-branch changes. Keep acceptance and release states distinct.
+
+| Repository | Intake / contributor PR | CI supply-chain PR | Last observed CI state |
+| --- | --- | --- | --- |
+| Grid Atlas | [#271](https://github.com/vlovers/grid-atlas/pull/271) | [#272](https://github.com/vlovers/grid-atlas/pull/272) | Both Foundation CI passed |
+| AI Office | [#48](https://github.com/vlovers/ai-office/pull/48) | [#49](https://github.com/vlovers/ai-office/pull/49) | Validation still running at last poll |
+| RuleWitness | [#83](https://github.com/vlovers/rulewitness/pull/83) | Existing pinned and read-only CI | Both workflows passed |
+| MutationBoundary | [#69](https://github.com/vlovers/mutation-boundary/pull/69) | Existing pinned and read-only CI | Checks passed |
+| Estima | [#14](https://github.com/vlovers/estima/pull/14) | Workflow/permissions audit pending | PostgreSQL + Bun workflows passed |
+
+**Integration rule:** before opening another broad standardization PR, finish the existing queue or document a verified blocker. The PR author cannot self-certify independence simply by running another prompt. Confirm real repository rulesets and approvals through GitHub settings or an authorized reviewer; current GitHub connector does not expose branch protection settings. For AI Office, check whether PR branches diverged since last verified run, and do not apply stale green CI to a new SHA.
+
+**Review focus:** malformed GitHub Issue YAML front matter, reporter security guidance, duplicate template options, unpinned third-party actions, persistent checkout credentials and CI on the exact final head. Resolve with narrow commits to the current PR branches; do not mass-close Issues or auto-merge.

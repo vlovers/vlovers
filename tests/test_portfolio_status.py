@@ -42,6 +42,9 @@ class PortfolioStatusTests(unittest.TestCase):
                 self.assertEqual(portfolio_status.main(), 0)
         self.assertIn("| [aaaaaaaaaa](https://github.com/vlovers/grid-atlas/commit/" + "a" * 40 + ") | 1 | 1 | v1.2.3 |", output.getvalue())
         self.assertNotIn("Frostline", output.getvalue())
+        self.assertIn("## Follow-up PRs — issue intake and CI security", output.getvalue())
+        self.assertIn("grid-atlas #272", output.getvalue())
+        self.assertIn("estima #15", output.getvalue())
 
     def test_fails_closed_on_api_errors(self):
         def fail(_path):
@@ -170,6 +173,65 @@ class PortfolioStatusTests(unittest.TestCase):
         with patch.object(portfolio_status, "request", side_effect=fake_request):
             with self.assertRaises(TimeoutError):
                 portfolio_status.foundation_pr_status("rulewitness", 82)
+
+
+    def test_followup_queue_covers_existing_intake_and_ci_security_prs(self):
+        self.assertEqual(
+            {(name, number, lane) for name, number, lane in portfolio_status.FOLLOWUP_PRS},
+            {
+                ("grid-atlas", 271, "issue intake"),
+                ("grid-atlas", 272, "CI security"),
+                ("ai-office", 48, "issue intake"),
+                ("ai-office", 49, "CI security"),
+                ("rulewitness", 83, "issue intake"),
+                ("mutation-boundary", 69, "issue intake"),
+                ("mutation-boundary", 70, "CI security"),
+                ("estima", 14, "issue intake"),
+                ("estima", 15, "CI security"),
+            },
+        )
+        self.assertNotIn("frostline", {name for name, _, _ in portfolio_status.FOLLOWUP_PRS})
+
+    def test_followup_table_shows_exact_head_and_unknown_on_failed_lookup(self):
+        sha = "c" * 40
+        output = io.StringIO()
+        with patch.object(portfolio_status, "foundation_pr_status", side_effect=[
+            ("open", sha, "1/1 observed success", "no head-SHA non-author approval observed"),
+            TimeoutError("GitHub unavailable"),
+        ]):
+            with contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+                failures = portfolio_status.render_pr_queue(
+                    "Follow-up checks",
+                    (("grid-atlas", 272, "CI security"), ("estima", 15, "CI security")),
+                    show_lane=True,
+                )
+        self.assertEqual(failures, 1)
+        self.assertIn("| Lane | State |", output.getvalue())
+        self.assertIn("| open | `cccccccccccc` | 1/1 observed success |", output.getvalue())
+        self.assertIn("estima #15", output.getvalue())
+        self.assertIn("| unknown | unknown | unknown | unknown |", output.getvalue())
+
+    def test_main_fails_closed_when_followup_review_unavailable(self):
+        with patch.object(portfolio_status, "REPOSITORIES", ()), \
+             patch.object(portfolio_status, "FOUNDATION_PRS", ()), \
+             patch.object(portfolio_status, "FOLLOWUP_PRS", (("estima", 15, "CI security"),)), \
+             patch.object(portfolio_status, "foundation_pr_status", side_effect=TimeoutError("review unavailable")):
+            with contextlib.redirect_stdout(io.StringIO()) as output:
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(portfolio_status.main(), 1)
+        self.assertIn("estima #15", output.getvalue())
+        self.assertIn("| unknown | unknown | unknown | unknown |", output.getvalue())
+
+    def test_rejects_malformed_workflow_metadata_instead_of_reporting_success(self):
+        sha = "a" * 40
+        summarize = portfolio_status.summarize_workflow_runs
+        for malformed in (None, {}, {"workflow_runs": [], "total_count": -1},
+                          {"workflow_runs": {}, "total_count": 0},
+                          {"workflow_runs": [None], "total_count": 1},
+                          {"workflow_runs": [], "total_count": "0"}):
+            with self.subTest(malformed=malformed):
+                with self.assertRaises(ValueError):
+                    summarize(malformed, sha)
 
 
 if __name__ == "__main__":

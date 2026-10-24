@@ -30,7 +30,7 @@ FOUNDATION_PRS = (
 
 # Separate review lanes: intake and CI/supply-chain changes remain unmerged until
 # their own review and required checks. Tracking a PR is not an authorization.
-SHA_PATTERN = re.compile(r"[0-9a-fA-F]{40}\\Z")
+SHA_PATTERN = re.compile(r"[0-9a-fA-F]{40}$")
 
 
 def validate_sha(value):

@@ -76,10 +76,10 @@ The six baseline PRs were checked against their **current head SHA**, not a prev
 | Foundation PR | Head SHA | Observed Actions |
 | --- | --- | --- |
 | [Grid Atlas #268](https://github.com/vlovers/grid-atlas/pull/268) | `c03c68f96a87` | Merged; Foundation CI success on former PR head |
-| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `304f0e9b86e8` | AI Office validation success |
-| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `124e45efd403` | CI + permissions review success |
-| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `ca8783f92896` | MutationBoundary checks success |
-| [Estima #13](https://github.com/vlovers/estima/pull/13) | `d02560c79215` | Bun + PostgreSQL integration success |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `87d7f8c1f01d` | AI Office validation success |
+| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `7ea6357de953` | CI + permissions review success |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `c8b80b62b49` | MutationBoundary checks success |
+| [Estima #13](https://github.com/vlovers/estima/pull/13) | `804873ea0b0c` | Bun + PostgreSQL integration success |
 | [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | moving head | Previous CI successful; new review-evidence tests require fresh CI on final commit |
 
 All five still-open baseline PRs require independent review and maintainer acceptance. A historical success does not apply after a new push.
@@ -105,3 +105,24 @@ These are **separate open PRs**, not deployed default-branch changes. CI observa
 **Integration rule:** before opening another broad standardization PR, finish the existing queue or document a verified blocker. The PR author cannot self-certify independence simply by running another prompt. Confirm real repository rulesets and approvals through GitHub settings or an authorized reviewer; current GitHub connector does not expose branch protection settings. For AI Office, check whether PR branches diverged since last verified run, and do not apply stale green CI to a new SHA.
 
 **Review focus:** malformed GitHub Issue YAML front matter, reporter security guidance, duplicate template options, unpinned third-party actions, persistent checkout credentials and CI on the exact final head. Resolve with narrow commits to the current PR branches; do not mass-close Issues or auto-merge.
+
+## Read-only follow-up PR verification — 2026-10-24
+
+Rechecked **all nine existing intake/CI-security PRs** at their current head SHA. This is a dated Actions observation, not an approval or claim that security controls have been deployed to the default branch.
+
+| Repo / PR | Head SHA | Observed PR Actions | Integration note |
+| --- | --- | --- | --- |
+| [Grid Atlas #271](https://github.com/vlovers/grid-atlas/pull/271) | `6c93c1c87219` | Foundation CI 1/1 success | open |
+| [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272) | `4aeab9b78c81` | 9/9 success | open; independent review pending |
+| [AI Office #48](https://github.com/vlovers/ai-office/pull/48) | `298cd4682b5e` | validation 1/1 success | open; branch diverged from latest main |
+| [AI Office #49](https://github.com/vlovers/ai-office/pull/49) | `31e4b3e4ead7` | validation 1/1 success | open; branch diverged from latest main |
+| [RuleWitness #83](https://github.com/vlovers/rulewitness/pull/83) | `9cd3713a7b41` | CI + permissions review 2/2 success | open |
+| [MutationBoundary #69](https://github.com/vlovers/mutation-boundary/pull/69) | `8b830e3fe622` | checks 1/1 success | open |
+| [MutationBoundary #70](https://github.com/vlovers/mutation-boundary/pull/70) | `4e67f8b95c53` | checks 1/1 success | open; release guard not deployed |
+| [Estima #14](https://github.com/vlovers/estima/pull/14) | `1b8b9e8e9233` | Bun + PostgreSQL 2/2 success | open; target develop |
+| [Estima #15](https://github.com/vlovers/estima/pull/15) | `4116230468e2` | Bun + PostgreSQL 2/2 success | open; target develop |
+
+**AI Office branch integration:** reverse comparison from foundation #43 to latest `main` shows **14 commits on main absent from that branch** as of this audit; #48 and #49 each show **11**. GitHub reports the PRs mergeable on the latest read, but this does not substitute for integrating current main and re-running validation on the resulting SHA. Do not automatically rebase, force-push, or merge to satisfy a dashboard indicator.
+
+The [portfolio refresh script](../scripts/portfolio_status.py) now observes both the six foundation PRs and these nine follow-ups with exact-head CI and non-author review evidence. Unknown/malformed API responses are never accepted as green. Its offline CI tests do not query live GitHub, and it does not inspect repository branch protection or required-check rules.
+

@@ -332,7 +332,9 @@ def classify_pr_attention(record):
         return "integration_blocker"
     if workflow == "pending":
         return "ci_pending"
-    # GitHub may report mergeable=true while checks are absent or incomplete.\n    # Never promote missing evidence into a review-ready signal.\n    if not isinstance(workflow, str) or not re.fullmatch(
+    # GitHub may report mergeable=true while checks are absent or incomplete.
+    # Never promote missing evidence into a review-ready signal.
+    if not isinstance(workflow, str) or not re.fullmatch(
         r"[1-9][0-9]*/[1-9][0-9]* observed success", workflow
     ):
         return "unknown"

@@ -113,3 +113,5 @@ History artifact discovery validates candidate artifact IDs, originating run IDs
 Historical attention counts include `action_required` alongside CI failure, pending, review and unknown states. This is essential for GitHub Actions approval-gated PRs: the history collector must not reject a valid snapshot simply because a workflow requires human action.
 
 Artifact selection requires parseable UTC `created_at` timestamps (GitHub's `Z` form); timezone-naive or non-UTC metadata is ignored rather than compared inconsistently across artifact pages.
+
+The scheduled workflow publishes `engineering-portfolio-snapshot` only when a valid `portfolio-history.json` has been produced after a successful restore step. If history is unavailable, it uploads available JSON/Markdown evidence as `engineering-portfolio-diagnostic` instead. Diagnostic artifacts are deliberately excluded from future history restoration so an incomplete upload cannot repeatedly break subsequent runs.

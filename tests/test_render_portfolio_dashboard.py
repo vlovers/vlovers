@@ -123,6 +123,12 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid PR identity"):
             render(snapshot)
 
+    def test_unhashable_dependency_identity_fails_predictably(self):
+        from scripts.render_portfolio_dashboard import dependency_rows
+        with self.assertRaisesRegex(ValueError, "Invalid dependency PR identity"):
+            dependency_rows([{"repository": ["vlovers/ai-office"],
+                              "number": 43, "state": "open"}])
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

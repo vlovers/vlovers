@@ -75,3 +75,7 @@ Known changed-file overlaps are explicitly pinned to the full 40-character PR he
 The snapshot distinguishes `action required observed` from `failure observed`. An `action_required` workflow conclusion is an unresolved GitHub Actions gate, **not** evidence that tests executed and failed. It receives its own dashboard attention category; neither condition counts as successful current-head CI. Inspect the run and GitHub's workflow approval controls before asking an agent to change code.
 
 When an exact-head set contains both an actual failed workflow and an `action_required` workflow, the failed result takes precedence in the aggregate observation; neither can be represented as green. A run with no accessible jobs must not be described as executed tests. `action_required` may reflect a workflow approval gate or another GitHub-required action: inspect the run UI rather than assuming the cause.
+
+### Review evidence fail-closed policy
+
+Successful observed Actions runs do not imply a reviewer has approved a PR. A missing, malformed or unrecognized review observation is classified as `unknown`, not `review_observed_not_authorized`. Only an explicit positive count of head-SHA non-author approvals can enter the review-observed category, and even that is not authorization to merge.

@@ -2,7 +2,7 @@
 
 **Engineering normalization:** see the [verified rollout audit, gap matrix and cleanup gates](ENGINEERING_ROLLOUT_AUDIT.md), the [cross-repository engineering work queue](ENGINEERING_WORK_QUEUE.md), and the [owner-ready branch protection setup guide](BRANCH_RULESET_SETUP.md).
 
-This is a **dated planning snapshot**, not live CI or release certification. Use the [refresh script](../scripts/portfolio_status.py) to retrieve current public GitHub state. The snapshot was assembled 2026-10-24 UTC. Never turn a passed source CI check into a claim of released functionality.
+**Machine-readable report:** run `python3 scripts/portfolio_status.py --format json` to emit schema v1 with six repository records, tracked PR observations and explicit query errors. JSON mode exits nonzero if any query failed. This is read-only observational data, not merge clearance; do not commit API tokens or interpret missing values as passing checks. The default output remains Markdown.\n\nThis is a **dated planning snapshot**, not live CI or release certification. Use the [refresh script](../scripts/portfolio_status.py) to retrieve current public GitHub state. The snapshot was assembled 2026-10-24 UTC. Never turn a passed source CI check into a claim of released functionality.
 
 | Project | Engineering goal | Known review/release gate | Foundation PR |
 | --- | --- | --- | --- |

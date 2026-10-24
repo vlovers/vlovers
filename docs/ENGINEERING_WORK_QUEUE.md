@@ -4,6 +4,21 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+### Foundation PR integration audit — 2026-10-24
+
+A fresh GitHub compare of each target base SHA to the PR head showed `ahead` with `behind=0` for all six entries below at the moment checked. This is only commit-graph evidence, not proof that sequential merges or required checks are safe. Exact-head Actions runs were checked independently.
+
+| PR | Exact head | Compare to current target base | Observed exact-head Actions | Next gate |
+| --- | --- | --- | --- | --- |
+| [Central portfolio #2](https://github.com/vlovers/vlovers/pull/2) | `9689496b815c110631969879c3c1500e1d56ae32` | 203 ahead, 0 behind; 16 changed files | Portfolio report validation: success | **Large accumulated diff**: independent full-diff review, verify scope and commands, then recheck final SHA |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `3eb4eaae2b8c7af7e788d1d4feb14602e0d7ea92` | 16 ahead, 0 behind; 6 changed files | AI Office validation: success | Human review before dependent #48/#49 |
+| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `7ea6357de953a8cb9e37140dc2b67765f7941b5b` | 9 ahead, 0 behind; 6 changed files | CI and permissions review: success | Human review before #83 |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `d901cc88697a0e3008f866d32b6385f17342d52d` | 14 ahead, 0 behind; 10 changed files | MutationBoundary checks: success | Human review; reconcile known overlaps before #69/#70 |
+| [Estima #13](https://github.com/vlovers/estima/pull/13) | `804873ea0b0c6311cce9dd7e883df1224ac93bfa` | 11 ahead, 0 behind; 6 changed files | PostgreSQL integration and Bun migration: success | Human review before #14/#15 |
+| [Last Chapter draft #5](https://github.com/vlovers/last-chapter/pull/5) | `8a87cf1279d89fe20ae2942e33262dfd41dd6818` | 92 ahead, 0 behind; 118 changed files | CI and formatting: **action_required** | Resolve GitHub Actions gate, inspect very large draft diff, rerun on final SHA |
+
+Do not interpret `action_required` as a code test failure, or a successful workflow as independent review or merge authorization. All observations become historical when a head or target base changes.
+
 ### Changed-file overlap re-audit — 2026-10-24
 
 Read-only full paginated PR filename lists were rechecked at the exact heads below. This confirms *filename intersections*, not semantic compatibility or merge authorization.

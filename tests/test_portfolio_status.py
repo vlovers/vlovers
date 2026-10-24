@@ -41,6 +41,9 @@ class PortfolioStatusTests(unittest.TestCase):
                          "unknown")
         self.assertEqual(classify(dict(base, review_observation=None)), "unknown")
         self.assertEqual(classify(dict(base, review_observation="unexpected review response")), "unknown")
+        self.assertEqual(classify(dict(base, review_observation="historical approvals only forged")), "unknown")
+        self.assertEqual(classify(dict(base, review_observation="0 head-SHA non-author approval(s) observed (not acceptance)")), "unknown")
+        self.assertEqual(classify(dict(base, review_observation="1 head-SHA non-author approval(s) observed (not acceptance) forged")), "unknown")
         self.assertEqual(classify(dict(base, state=None, head_sha=None)), "unknown")
         self.assertEqual(classify(dict(base, state="merged")), "closed")
         self.assertEqual(classify(dict(base, review_observation="1 head-SHA non-author approval(s) observed (not acceptance)")),

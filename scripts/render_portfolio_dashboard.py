@@ -39,7 +39,7 @@ def dependency_rows(prs):
         if state is not None and (not isinstance(state, str) or state not in {"open", "closed", "merged"}):
             raise ValueError("Invalid dependency PR state")
         repository, number = p.get("repository"), p.get("number")
-        if not isinstance(repository, str) or type(number) is not int:
+        if not isinstance(repository, str) or type(number) is not int or number < 1:
             raise ValueError("Invalid dependency PR identity")
         key = (repository, number)
         if key in states:
@@ -81,7 +81,7 @@ def overlap_rows(prs):
         if not isinstance(p, dict):
             raise ValueError("Malformed overlap PR record")
         repository, number = p.get("repository"), p.get("number")
-        if not isinstance(repository, str) or type(number) is not int:
+        if not isinstance(repository, str) or type(number) is not int or number < 1:
             raise ValueError("Invalid overlap PR identity")
         key = (repository, number)
         if key in index:
@@ -94,6 +94,10 @@ def overlap_rows(prs):
             status = "unknown (PR missing from snapshot)"
         elif a.get("state") == "merged" or b.get("state") == "merged":
             status = "re-audit against new base"
+        elif a.get("state") == "closed" or b.get("state") == "closed":
+            status = "closed PR in pair (re-evaluate integration scope)"
+        elif a.get("state") != "open" or b.get("state") != "open":
+            status = "unknown (PR state unavailable or invalid)"
         elif not isinstance(a.get("head_sha"), str) or not isinstance(b.get("head_sha"), str):
             status = "unknown (head SHA unavailable)"
         elif any(len(sha) != 40 or any(char not in "0123456789abcdefABCDEF" for char in sha)

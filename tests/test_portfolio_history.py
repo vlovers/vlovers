@@ -20,6 +20,15 @@ class PortfolioHistoryTests(unittest.TestCase):
                          ["2026-10-25T00:00:00Z", "2026-10-26T00:00:00Z"])
         self.assertEqual(len(append_history([first], first)), 1)
 
+    def test_action_required_is_preserved_in_trend_history(self):
+        snapshot = {"schema_version": 1, "repositories": [],
+                    "tracked_prs": [{"repository": "vlovers/last-chapter",
+                                     "number": 5, "attention": "action_required"}],
+                    "errors": []}
+        summary = summarize(snapshot, "2026-10-24T01:00:00Z")
+        self.assertEqual(summary["attention_counts"], {"action_required": 1})
+        self.assertEqual(append_history([], summary)[0]["attention_counts"]["action_required"], 1)
+
     def test_rejects_out_of_order_or_duplicate_evidence(self):
         item = {"repository": "vlovers/estima", "number": 15, "attention": "unknown"}
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [item, item],

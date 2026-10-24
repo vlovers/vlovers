@@ -105,3 +105,5 @@ Exact-head Actions verification requires a valid 40-character hexadecimal target
 The offline Markdown renderer validates scalar attention categories and dependency states before membership checks. Malformed list/object values produce explicit validation errors rather than an unhandled type exception or misleading report.
 
 Known changed-file overlap warnings distinguish two open PRs from pairs containing a closed PR (integration scope must be re-evaluated), a merged PR (re-audit against the new base), or unknown/invalid PR state (no manual-reconciliation conclusion). Dependency and overlap renderers reject nonpositive PR identifiers.
+
+History continuity safety: the scheduled workflow appends a new history entry only if restoration of the prior artifact succeeded (including the explicit first-run/no-artifact case). A restore error prevents the append step, avoiding a silent history reset; diagnostic snapshot/dashboard artifacts may still upload, and the workflow reports the failure.

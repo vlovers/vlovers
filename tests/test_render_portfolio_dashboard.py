@@ -110,6 +110,12 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate PR"):
             render(snapshot)
 
+    def test_dependency_rows_reject_duplicate_pr_states(self):
+        from scripts.render_portfolio_dashboard import dependency_rows
+        item = {"repository": "vlovers/ai-office", "number": 43, "state": "open"}
+        with self.assertRaisesRegex(ValueError, "Duplicate dependency"):
+            dependency_rows([item, dict(item, state="merged")])
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

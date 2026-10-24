@@ -217,10 +217,11 @@ class PortfolioStatusTests(unittest.TestCase):
                 ]}
             raise AssertionError(path)
         with patch.object(portfolio_status, "request", side_effect=fake_request):
-            state, head, ci, review = portfolio_status.foundation_pr_status("rulewitness", 82)
+            state, head, ci, review, mergeability = portfolio_status.foundation_pr_status("rulewitness", 82)
         self.assertEqual((state, head, ci, review),
                          ("open", sha, "unknown (no exact-SHA evidence)",
                           "no head-SHA non-author approval observed"))
+        self.assertEqual(mergeability, "unknown (GitHub pending)")
         self.assertIn("head_sha=" + sha, paths[1])
         self.assertIn("event=pull_request", paths[1])
 
@@ -319,7 +320,7 @@ class PortfolioStatusTests(unittest.TestCase):
         sha = "c" * 40
         output = io.StringIO()
         with patch.object(portfolio_status, "foundation_pr_status", side_effect=[
-            ("open", sha, "1/1 observed success", "no head-SHA non-author approval observed"),
+            ("open", sha, "1/1 observed success", "no head-SHA non-author approval observed", "mergeable observed (not clearance)"),
             TimeoutError("GitHub unavailable"),
         ]):
             with contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):

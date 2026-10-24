@@ -141,7 +141,11 @@ def summarize_review_evidence(reviews, expected_sha, author_login):
             continue
         if state in {"APPROVED", "CHANGES_REQUESTED", "DISMISSED"}:
             # GitHub's PR reviews endpoint lists reviews chronologically.
-            latest_decisive[login.lower()] = review
+            # Dismissal clears that reviewer's earlier decisive review.
+            if state == "DISMISSED":
+                latest_decisive.pop(login.lower(), None)
+            else:
+                latest_decisive[login.lower()] = review
     if any(review["state"] == "CHANGES_REQUESTED" for review in latest_decisive.values()):
         return "changes requested observed (not cleared)"
     approvals = sum(

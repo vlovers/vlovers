@@ -65,12 +65,12 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(len(calls), 4)
 
     def test_listing_pagination_fails_closed_on_invalid_or_unbounded_responses(self):
-        for bad in (None, {}, [{"number": 1}, None]):
+        for bad in (None, {}, [{"number": 1}, None], [{}], [{"number": True}], [{"number": 0}], [{"number": "1"}]):
             with self.subTest(bad=bad):
                 with patch.object(portfolio_status, "request", return_value=bad):
                     with self.assertRaises(ValueError):
                         portfolio_status.count_open_items("vlovers/estima", "issues")
-        with patch.object(portfolio_status, "request", return_value=[{}] * 100) as fetch:
+        with patch.object(portfolio_status, "request", return_value=[{"number": i + 1} for i in range(100)]) as fetch:
             with self.assertRaisesRegex(ValueError, "pagination exceeded"):
                 portfolio_status.count_open_items("vlovers/estima", "pulls")
         self.assertEqual(fetch.call_count, 20)

@@ -36,7 +36,7 @@ def dependency_rows(prs):
         if not isinstance(p, dict):
             raise ValueError("Malformed dependency PR record")
         state = p.get("state")
-        if state is not None and state not in {"open", "closed", "merged"}:
+        if state is not None and (not isinstance(state, str) or state not in {"open", "closed", "merged"}):
             raise ValueError("Invalid dependency PR state")
         repository, number = p.get("repository"), p.get("number")
         if not isinstance(repository, str) or type(number) is not int:
@@ -141,7 +141,7 @@ def render(snapshot):
             c.isascii() and (c.isalnum() or c in "-_") for c in repo.split("/", 1)[1]
         ):
             raise ValueError("Invalid repository")
-        if type(number) is not int or number < 1 or attention not in ATTENTION:
+        if type(number) is not int or number < 1 or not isinstance(attention, str) or attention not in ATTENTION:
             raise ValueError("Invalid PR identifier or attention")
         age = item.get("days_since_update")
         if age is not None and (type(age) is not int or age < 0):

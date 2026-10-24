@@ -85,6 +85,22 @@ class DashboardTests(unittest.TestCase):
         self.assertTrue(any("mutation-boundary#70" in row and "unknown" in row
                             for row in rows))
 
+    def test_dependency_renderer_rejects_untrusted_state(self):
+        from scripts.render_portfolio_dashboard import dependency_rows
+        with self.assertRaises(ValueError):
+            dependency_rows([{"repository": "vlovers/ai-office", "number": 43,
+                              "state": "open|injected"}])
+
+    def test_overlap_audit_rejects_invalid_sha_evidence(self):
+        from scripts.render_portfolio_dashboard import overlap_rows
+        rows = overlap_rows([
+            {"repository": "vlovers/mutation-boundary", "number": 68,
+             "state": "open", "head_sha": "not-a-sha"},
+            {"repository": "vlovers/mutation-boundary", "number": 69,
+             "state": "open", "head_sha": "8b830e3fe622d52bf4d3bd73cf792ad22d584a9"},
+        ])
+        self.assertIn("unknown (invalid head SHA)", rows[0])
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

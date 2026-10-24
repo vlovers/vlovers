@@ -321,15 +321,19 @@ def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
 
 def classify_pr_attention(record):
     """Deterministic triage from observed evidence, never merge authorization."""
-    if record["state"] == "merged":
-        return "closed"
-    if record["state"] == "closed":
-        return "closed"
-    if record["state"] != "open" or record["head_sha"] is None:
+    if not isinstance(record, dict):
         return "unknown"
-    workflow = record["workflow_observation"]
-    review = record["review_observation"]
-    mergeability = record["mergeability_observation"]
+    state = record.get("state")
+    if state in {"merged", "closed"}:
+        return "closed"
+    head_sha = record.get("head_sha")
+    if state != "open" or not isinstance(head_sha, str) or not re.fullmatch(
+        r"[0-9a-fA-F]{40}", head_sha
+    ):
+        return "unknown"
+    workflow = record.get("workflow_observation")
+    review = record.get("review_observation")
+    mergeability = record.get("mergeability_observation")
     if workflow == "failure observed":
         return "ci_failure"
     if workflow == "action required observed":

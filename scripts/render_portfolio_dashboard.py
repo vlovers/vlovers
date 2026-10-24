@@ -50,6 +50,32 @@ def dependency_rows(prs):
 
 
 
+
+# Explicitly audited changed-file overlaps; update after PR head changes.
+KNOWN_FILE_OVERLAPS = (
+    ("vlovers/mutation-boundary", 68, 69, ("CONTRIBUTING.md",)),
+    ("vlovers/mutation-boundary", 68, 70, ("README.md", "docs/RELEASING.md")),
+)
+
+
+def overlap_rows(prs):
+    index = {(p.get("repository"), p.get("number")): p for p in prs
+             if isinstance(p, dict)}
+    rows = []
+    for repo, first, second, paths in KNOWN_FILE_OVERLAPS:
+        a, b = index.get((repo, first)), index.get((repo, second))
+        if not a or not b:
+            status = "unknown (PR missing from snapshot)"
+        elif a.get("state") == "merged" or b.get("state") == "merged":
+            status = "re-audit against new base"
+        else:
+            status = "manual reconciliation required"
+        safe_paths = ", ".join(paths)
+        rows.append(f"| {repo} #{first} / #{second} | {safe_paths} | {status} |")
+    return rows
+
+
+
 def render(snapshot):
     if not isinstance(snapshot, dict) or snapshot.get("schema_version") != 1:
         raise ValueError("Unsupported snapshot schema")
@@ -86,6 +112,9 @@ def render(snapshot):
     lines.extend(["", "## Integration dependencies (advisory)", "",
                   "| PR | Dependency observation |", "| --- | --- |"])
     lines.extend(dependency_rows(prs))
+    lines.extend(["", "## Known file overlaps (audit snapshot)", "",
+                  "| PR pair | Files | Required follow-up |", "| --- | --- | --- |"])
+    lines.extend(overlap_rows(prs))
     if errors:
         lines.extend(["", "**Incomplete data:** one or more GitHub queries failed. Missing observations are unknown."])
     return "\n".join(lines) + "\n"

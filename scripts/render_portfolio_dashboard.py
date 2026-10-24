@@ -53,8 +53,10 @@ def dependency_rows(prs):
 
 # Explicitly audited changed-file overlaps; update after PR head changes.
 KNOWN_FILE_OVERLAPS = (
-    ("vlovers/mutation-boundary", 68, 69, ("CONTRIBUTING.md",)),
-    ("vlovers/mutation-boundary", 68, 70, ("README.md", "docs/RELEASING.md")),
+    ("vlovers/mutation-boundary", 68, 69, ("CONTRIBUTING.md",),
+     "d901cc8869", "8b830e3fe6"),
+    ("vlovers/mutation-boundary", 68, 70, ("README.md", "docs/RELEASING.md"),
+     "d901cc8869", "4e67f8b95c"),
 )
 
 
@@ -62,14 +64,18 @@ def overlap_rows(prs):
     index = {(p.get("repository"), p.get("number")): p for p in prs
              if isinstance(p, dict)}
     rows = []
-    for repo, first, second, paths in KNOWN_FILE_OVERLAPS:
+    for repo, first, second, paths, audited_first, audited_second in KNOWN_FILE_OVERLAPS:
         a, b = index.get((repo, first)), index.get((repo, second))
         if not a or not b:
             status = "unknown (PR missing from snapshot)"
         elif a.get("state") == "merged" or b.get("state") == "merged":
             status = "re-audit against new base"
+        elif not isinstance(a.get("head_sha"), str) or not isinstance(b.get("head_sha"), str):
+            status = "unknown (head SHA unavailable)"
+        elif not a["head_sha"].startswith(audited_first) or not b["head_sha"].startswith(audited_second):
+            status = "stale audit (PR head changed; re-audit files)"
         else:
-            status = "manual reconciliation required"
+            status = "manual reconciliation required (heads match audit)"
         safe_paths = ", ".join(paths)
         rows.append(f"| {repo} #{first} / #{second} | {safe_paths} | {status} |")
     return rows

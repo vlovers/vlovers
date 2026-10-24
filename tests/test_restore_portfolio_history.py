@@ -45,6 +45,20 @@ class RestoreHistoryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             select_previous_artifact({"artifacts": []}, 0)
 
+    def test_artifact_timestamp_requires_utc_and_never_mixes_timezones(self):
+        payload = {"artifacts": [
+            {"id": 1, "name": "engineering-portfolio-snapshot",
+             "created_at": "2026-10-24T01:00:00+01:00", "expired": False,
+             "workflow_run": {"id": 10}},
+            {"id": 2, "name": "engineering-portfolio-snapshot",
+             "created_at": "2026-10-24T00:00:00Z", "expired": False,
+             "workflow_run": {"id": 11}},
+            {"id": 3, "name": "engineering-portfolio-snapshot",
+             "created_at": "2026-10-24T02:00:00", "expired": False,
+             "workflow_run": {"id": 12}},
+        ]}
+        self.assertEqual(select_previous_artifact(payload, 13)["id"], 2)
+
     def test_extracts_history_without_unzipping_paths(self):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:

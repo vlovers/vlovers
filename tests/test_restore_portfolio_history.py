@@ -5,7 +5,7 @@ import json
 import unittest
 import zipfile
 
-from scripts.restore_portfolio_history import extract_history, select_previous_artifact
+from scripts.restore_portfolio_history import extract_history, select_previous_artifact, find_previous_artifact
 
 
 class RestoreHistoryTests(unittest.TestCase):
@@ -61,6 +61,25 @@ class RestoreHistoryTests(unittest.TestCase):
             ]))
         with self.assertRaises(ValueError):
             extract_history(buffer.getvalue())
+
+    def test_bounded_discovery_rejects_incomplete_empty_result(self):
+        with self.assertRaisesRegex(ValueError, "exceeded five pages"):
+            find_previous_artifact(lambda page: {"artifacts": [{}] * 100}, 99)
+
+    def test_bounded_discovery_accepts_genuine_empty_history(self):
+        self.assertIsNone(find_previous_artifact(
+            lambda page: {"artifacts": []}, 99))
+
+    def test_bounded_discovery_finds_prior_artifact_on_later_page(self):
+        def page(number):
+            if number == 1:
+                return {"artifacts": [{}] * 100}
+            return {"artifacts": [
+                {"id": 42, "name": "engineering-portfolio-snapshot",
+                 "created_at": "2026-10-24T00:00:00Z", "expired": False,
+                 "workflow_run": {"id": 98}},
+            ]}
+        self.assertEqual(find_previous_artifact(page, 99)["id"], 42)
 
     def test_rejects_missing_history(self):
         buffer = io.BytesIO()

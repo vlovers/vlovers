@@ -33,11 +33,19 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/portfolio_status.py --format json > portfolio-snapshot.json
+      - name: Render Markdown dashboard
+        if: always()
+        run: |
+          if test -s portfolio-snapshot.json; then
+            python3 scripts/render_portfolio_dashboard.py portfolio-snapshot.json > portfolio-dashboard.md
+          fi
       - name: Upload snapshot even when some GitHub queries fail
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: engineering-portfolio-snapshot
-          path: portfolio-snapshot.json
+          path: |
+            portfolio-snapshot.json
+            portfolio-dashboard.md
           if-no-files-found: warn
           retention-days: 14

@@ -21,7 +21,7 @@ def select_previous_artifact(payload, current_run_id):
     candidates = []
     for artifact in payload["artifacts"]:
         if not isinstance(artifact, dict):
-            raise ValueError("Malformed Actions artifact")
+            continue
         if artifact.get("name") != "engineering-portfolio-snapshot":
             continue
         if artifact.get("expired") is not False:
@@ -38,7 +38,7 @@ def select_previous_artifact(payload, current_run_id):
             continue
         if type(artifact_id) is not int or artifact_id < 1:
             continue
-        if not isinstance(created_at, str) or not created_at.endswith("Z"):
+        if not isinstance(created_at, str) or not created_at:
             continue
         try:
             parsed = datetime.datetime.fromisoformat(created_at.replace("Z", "+00:00"))

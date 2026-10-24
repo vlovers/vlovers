@@ -251,6 +251,21 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertIn("estima #15", output.getvalue())
         self.assertIn("| unknown | unknown | unknown | unknown |", output.getvalue())
 
+    def test_branch_drift_tracks_all_unmerged_engineering_prs(self):
+        expected = {
+            (name, number)
+            for name, number, *_ in (
+                *portfolio_status.FOUNDATION_PRS,
+                *portfolio_status.FOLLOWUP_PRS,
+            )
+            if (name, number) != ("grid-atlas", 268)
+        }
+        self.assertEqual(set(portfolio_status.BRANCH_DRIFT_PRS), expected)
+        self.assertEqual(len(portfolio_status.BRANCH_DRIFT_PRS), len(expected))
+        self.assertIn(("estima", 15), expected)
+        self.assertIn(("mutation-boundary", 70), expected)
+        self.assertNotIn(("grid-atlas", 268), expected)
+
     def test_branch_divergence_uses_live_base_ref_not_historical_base_sha(self):
         sha = "a" * 40
         paths = []

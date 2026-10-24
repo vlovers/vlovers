@@ -43,6 +43,10 @@ python3 scripts/portfolio_status.py
 GITHUB_TOKEN=... python3 scripts/portfolio_status.py
 ```
 
-The script performs read-only GitHub API requests and prints current default-branch commit SHA, open PR/issue counts and latest GitHub release tag **where available**. It does not certify CI or user-facing feature completeness, mutate GitHub objects, close issues, merge PRs, or publish packages.
+The script performs read-only GitHub API requests and prints current default-branch commit SHA, open PR/issue counts and latest GitHub release tag **where available**. It also checks the six tracked engineering foundation PRs (including this portfolio PR and merged Grid Atlas #268), reports their **current PR head SHA**, and summarizes **observed pull-request GitHub Actions runs only for that exact SHA**. It does not certify required checks, reviewer approval, branch rules, user-facing feature completeness, or release readiness. It never mutates GitHub objects, closes issues, merges PRs, or publishes packages.
+
+**Fail-closed semantics:** missing or mismatched Actions runs, incomplete pagination, skipped/neutral checks, malformed PR metadata, and API failures never become a green result. A failed workflow is reported as a failure; a pending workflow is not considered passed. A successful observed run does not prove that all required checks exist or that independent acceptance occurred. The script returns a nonzero exit code if any repository or foundation-PR query fails. Use an authorized read-only `GITHUB_TOKEN` for repeat runs to avoid unauthenticated rate limits; never put tokens in generated Markdown or CI logs.
+
+**CI scope:** `portfolio-validation.yml` runs offline regression tests and Python compilation on script, test, workflow **and dashboard documentation** changes. It does not query live GitHub or verify branch-protection settings; use the report manually for live status.
 
 At each iteration: read fresh status, revisit issue criteria, choose one cohesive feature outcome per active project, and retain dated decisions or blockers. Do not manually edit counts without verifying them.

@@ -54,7 +54,7 @@ class PortfolioStatusTests(unittest.TestCase):
         def fake_request(path):
             calls.append(path)
             if path.endswith("page=1"):
-                return [{"number": i, **({"pull_request": {}} if i % 2 else {})}
+                return [{"number": i + 1, **({"pull_request": {}} if i % 2 else {})}
                         for i in range(100)]
             if path.endswith("page=2"):
                 return [{"number": 101}]

@@ -39,6 +39,14 @@ jobs:
           if test -s portfolio-snapshot.json; then
             python3 scripts/render_portfolio_dashboard.py portfolio-snapshot.json > portfolio-dashboard.md
           fi
+      - name: Restore previous history from Actions artifact
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if test -s portfolio-snapshot.json; then
+            python3 scripts/restore_portfolio_history.py
+          fi
       - name: Build current history entry
         if: always()
         run: |

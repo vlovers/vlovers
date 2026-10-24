@@ -126,3 +126,18 @@ Rechecked **all nine existing intake/CI-security PRs** at their current head SHA
 
 The [portfolio refresh script](../scripts/portfolio_status.py) now observes both the six foundation PRs and these nine follow-ups with exact-head CI and non-author review evidence. Unknown/malformed API responses are never accepted as green. Its offline CI tests do not query live GitHub, and it does not inspect repository branch protection or required-check rules.
 
+
+
+## AI Office live-base reconciliation checkpoint — 2026-10-24
+
+Fresh comparisons against the **named live `main` ref** (not the historical `base.sha` from PR metadata) show the following integration backlog. These counts are Git history divergence, **not merge conflicts**; they change as `main` advances.
+
+| PR | PR head | Live `main`-only commits | PR-only commits | Integration status |
+| --- | --- | ---: | ---: | --- |
+| [#43](https://github.com/vlovers/ai-office/pull/43) | `87d7f8c1f01d` | 16 | 13 | Open; independent review and reconciliation outstanding |
+| [#48](https://github.com/vlovers/ai-office/pull/48) | `298cd4682b5e` | 13 | 9 | Open; independent review and reconciliation outstanding |
+| [#49](https://github.com/vlovers/ai-office/pull/49) | `31e4b3e4ead7` | 13 | 11 | Open; independent review and reconciliation outstanding |
+
+**Important API trap:** comparing `PR base.sha...PR head.sha` showed zero base-only commits because the observed `base.sha` values represented the original shared ancestor, **not the current tip of `main`**. The portfolio script now compares `PR head SHA...live base ref` for these three PRs, validates response metadata, and fails closed on compare errors. The report is read-only and cannot prove GitHub ruleset compliance or authorize a merge.
+
+**Next acceptance batch:** independently inspect all three PRs against current `main`, including delivery publication/Git-transfer documentation and workflow security interactions; decide integration order and reconcile in existing branches only after review. Re-run CI on each new head and record base/head SHA and reviewer disposition. Do not assume the existing successful PR checks validate the future integrated result.

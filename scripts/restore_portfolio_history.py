@@ -69,6 +69,7 @@ def main():
         raise ValueError("Invalid repository")
     endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
     artifact = None
+    exhausted = True
     for page in range(1, 6):
         payload = json.loads(api(f"{endpoint}&page={page}", token))
         candidate = select_previous_artifact(payload, run_id)
@@ -80,7 +81,10 @@ def main():
         if not isinstance(artifacts, list) or len(artifacts) > 100:
             raise ValueError("Invalid Actions artifact page")
         if len(artifacts) < 100:
+            exhausted = False
             break
+    if artifact is None and exhausted:
+        raise ValueError("Artifact lookup exceeded five pages; cannot safely start new history")
     if artifact is None:
         print("No previous snapshot artifact; beginning new history.")
         return

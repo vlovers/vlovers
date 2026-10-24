@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Restore a previous portfolio history artifact using read-only GitHub Actions API."""
 
+import datetime
 import io
 import json
 import os
@@ -43,6 +44,10 @@ def extract_history(data):
             timestamp = entry["observed_at"]
             if not timestamp.endswith("Z") or timestamp <= previous:
                 raise ValueError("Unordered history entries")
+            try:
+                datetime.datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ValueError("Invalid history timestamp") from exc
             previous = timestamp
         return history
 
@@ -61,7 +66,9 @@ def main():
     run_id = int(os.environ["GITHUB_RUN_ID"])
     if not all(repo.split("/")) or repo.count("/") != 1:
         raise ValueError("Invalid repository")
-    endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
+    # Filter by the intended workflow, not an unrelated artifact with the same name.
+    endpoint = (f"https://api.github.com/repos/{repo}/actions/workflows/"
+                "portfolio-snapshot.yml/artifacts?per_page=100")
     artifact = None
     for page in range(1, 6):
         payload = json.loads(api(f"{endpoint}&page={page}", token))

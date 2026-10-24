@@ -93,3 +93,5 @@ The file-overlap audit builder applies the same duplicate-identity and malformed
 The attention classifier treats malformed review observations (including lists, objects, null, and numbers) as `unknown` after higher-priority verified CI/integration blockers. It never interprets untrusted review metadata as an approval.
 
 PR attention classification also requires a recognized PR state and a valid full 40-character hexadecimal head SHA for open PRs. Missing fields, malformed records, or invalid head identities yield `unknown` rather than a review-ready classification.
+
+A successful Actions observation is eligible for review triage only when it has the canonical `N/N observed success` form with matching positive counts. Partial or inconsistent totals (for example `1/2 observed success`) remain `unknown`; this still does not certify required checks or authorize merging.

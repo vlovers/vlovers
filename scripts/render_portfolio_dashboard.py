@@ -38,7 +38,10 @@ def dependency_rows(prs):
         state = p.get("state")
         if state is not None and state not in {"open", "closed", "merged"}:
             raise ValueError("Invalid dependency PR state")
-        key = (p.get("repository"), p.get("number"))
+        repository, number = p.get("repository"), p.get("number")
+        if not isinstance(repository, str) or type(number) is not int:
+            raise ValueError("Invalid dependency PR identity")
+        key = (repository, number)
         if key in states:
             raise ValueError("Duplicate dependency PR")
         states[key] = state

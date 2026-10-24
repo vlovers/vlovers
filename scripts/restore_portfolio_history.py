@@ -61,17 +61,12 @@ def api(url, token, accept="application/vnd.github+json"):
         return response.read()
 
 
-def main():
-    repo = os.environ["GITHUB_REPOSITORY"]
-    token = os.environ["GITHUB_TOKEN"]
-    run_id = int(os.environ["GITHUB_RUN_ID"])
-    if not all(repo.split("/")) or repo.count("/") != 1:
-        raise ValueError("Invalid repository")
-    endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
+def find_previous_artifact(fetch_page, run_id):
+    """Fail closed when no prior artifact can be found within bounded pages."""
     artifact = None
     exhausted = True
     for page in range(1, 6):
-        payload = json.loads(api(f"{endpoint}&page={page}", token))
+        payload = fetch_page(page)
         candidate = select_previous_artifact(payload, run_id)
         if candidate is not None and (artifact is None or
                 (candidate.get("created_at") or "", candidate["id"]) >
@@ -85,6 +80,18 @@ def main():
             break
     if artifact is None and exhausted:
         raise ValueError("Artifact lookup exceeded five pages; cannot safely start new history")
+    return artifact
+
+
+def main():
+    repo = os.environ["GITHUB_REPOSITORY"]
+    token = os.environ["GITHUB_TOKEN"]
+    run_id = int(os.environ["GITHUB_RUN_ID"])
+    if not all(repo.split("/")) or repo.count("/") != 1:
+        raise ValueError("Invalid repository")
+    endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
+    artifact = find_previous_artifact(
+        lambda page: json.loads(api(f"{endpoint}&page={page}", token)), run_id)
     if artifact is None:
         print("No previous snapshot artifact; beginning new history.")
         return

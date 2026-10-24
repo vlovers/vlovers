@@ -160,6 +160,19 @@ def render_pr_queue(title, entries, show_lane=False):
     return errors
 
 
+def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
+    """Count all pages conservatively; never silently truncate a large queue."""
+    count = 0
+    for page in range(1, 21):
+        items = request(f"/repos/{owner_repo}/{endpoint}?state=open&per_page=100&page={page}")
+        if not isinstance(items, list) or any(not isinstance(item, dict) for item in items):
+            raise ValueError(f"Malformed {endpoint} listing")
+        count += sum(not (exclude_pull_requests and "pull_request" in item) for item in items)
+        if len(items) < 100:
+            return count
+    raise ValueError(f"{endpoint} pagination exceeded safety limit")
+
+
 def main():
     errors = 0
     print("# Portfolio GitHub status (live read-only query)\n")
@@ -173,24 +186,9 @@ def main():
             commit = request(f"/repos/{owner_repo}/commits/{urllib.parse.quote(branch, safe='')}")
             head_sha = commit["sha"]
             head = f"[{head_sha[:10]}](https://github.com/{OWNER}/{name}/commit/{head_sha})"
-            # GitHub issue listings include PRs: count issue records without pull_request.
-            # Pagination avoids silently reporting first-page counts as totals.
-            issue_count = 0
-            page = 1
-            while True:
-                issues = request(f"/repos/{owner_repo}/issues?state=open&per_page=100&page={page}")
-                issue_count += sum(1 for item in issues if "pull_request" not in item)
-                if len(issues) < 100:
-                    break
-                page += 1
-            page = 1
-            pr_count = 0
-            while True:
-                prs = request(f"/repos/{owner_repo}/pulls?state=open&per_page=100&page={page}")
-                pr_count += len(prs)
-                if len(prs) < 100:
-                    break
-                page += 1
+            # GitHub's issues endpoint also lists PRs; never count those as issues.
+            issue_count = count_open_items(owner_repo, "issues", exclude_pull_requests=True)
+            pr_count = count_open_items(owner_repo, "pulls")
             try:
                 release = request(f"/repos/{owner_repo}/releases/latest").get("tag_name", "unknown")
             except urllib.error.HTTPError as exc:

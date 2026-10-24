@@ -1,3 +1,19 @@
+## Exact-head integration readiness audit — 2026-10-24
+
+This section supersedes earlier mergeability observations. GitHub mergeability can change when the base branch moves. CI observations are not a certification of branch rules, reviewer independence or merge approval.
+
+| Repository | PRs | Exact-head Actions | Latest GitHub mergeability | Action |
+| --- | --- | --- | --- | --- |
+| AI Office | #43, #48, #49 | all observed runs successful | **false for all three** | Inspect branch drift and conflicts; coordinate agent updates in dependency order #43 → #48 → #49 |
+| RuleWitness | #82, #83 | 2 successful runs per PR | true | Review foundation #82 before intake #83; recheck SHA after updates |
+| MutationBoundary | #68, #69, #70 | 1 successful run per PR | true | Reconcile documented file overlaps; preserve v0.6.0 release history |
+| Estima (base: develop) | #13, #14, #15 | 2 successful runs per PR | true | Integrate in order #13 → #14 → #15 after independent review |
+| Grid Atlas | #271, #272 | #271 success; #272 mixed success/failure/cancelled | false for both | Resolve integration drift and inspect #272 failed job |
+| Last Chapter | #5 | failure in format:check | true | Product agent formats four listed files; do not weaken checks |
+
+**Safe next actions:** assign the AI Office base-drift resolution to its engineering agent, request Grid Atlas conflict review, route Last Chapter formatting to its product agent, and prepare independent review for RuleWitness / MutationBoundary / Estima. No automatic merges.
+
+
 ## File-overlap audit — 2026-10-24
 
 Audited complete changed-file lists for AI Office #43/#48/#49, RuleWitness #82/#83, MutationBoundary #68/#69/#70, Estima #13/#14/#15 and Grid Atlas #271/#272.

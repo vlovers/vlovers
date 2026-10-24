@@ -17,8 +17,11 @@ class PortfolioStatusTests(unittest.TestCase):
                 ]}
             if "/reviews?" in path:
                 return []
+            if "/compare/" in path:
+                return {"status": "diverged", "ahead_by": 2, "behind_by": 1}
             if "/pulls/" in path:
-                return {"head": {"sha": "a" * 40}, "state": "open", "merged_at": None,
+                return {"head": {"sha": "a" * 40}, "base": {"ref": "main"},
+                        "state": "open", "merged_at": None,
                         "user": {"login": "author"}}
             if path.endswith("/commits/main"):
                 return {"sha": "a" * 40}
@@ -247,6 +250,63 @@ class PortfolioStatusTests(unittest.TestCase):
                     self.assertEqual(portfolio_status.main(), 1)
         self.assertIn("estima #15", output.getvalue())
         self.assertIn("| unknown | unknown | unknown | unknown |", output.getvalue())
+
+    def test_branch_divergence_uses_live_base_ref_not_historical_base_sha(self):
+        sha = "a" * 40
+        paths = []
+        def fake_request(path):
+            paths.append(path)
+            if path.endswith("/pulls/43"):
+                return {"head": {"sha": sha}, "base": {"ref": "main", "sha": "b" * 40}}
+            if "/compare/" in path:
+                return {"status": "diverged", "ahead_by": 16, "behind_by": 13}
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            self.assertEqual(
+                portfolio_status.branch_drift_status("ai-office", 43),
+                (sha, "main", "base-only 16; PR-only 13 (diverged)"),
+            )
+        self.assertEqual(paths[-1], "/repos/vlovers/ai-office/compare/" + sha + "...main")
+        self.assertNotIn("b" * 40, paths[-1])
+
+    def test_branch_divergence_counts_direction_and_equal_heads(self):
+        summarize = portfolio_status.summarize_branch_divergence
+        self.assertEqual(summarize({"status": "ahead", "ahead_by": 2, "behind_by": 0}),
+                         "base-only 2; PR-only 0 (ahead)")
+        self.assertEqual(summarize({"status": "behind", "ahead_by": 0, "behind_by": 5}),
+                         "base-only 0; PR-only 5 (behind)")
+        self.assertEqual(summarize({"status": "identical", "ahead_by": 0, "behind_by": 0}),
+                         "base-only 0; PR-only 0 (identical)")
+
+    def test_branch_divergence_rejects_malformed_and_boolean_counts(self):
+        summarize = portfolio_status.summarize_branch_divergence
+        for bad in (None, {}, {"status": "diverged", "ahead_by": True, "behind_by": 1},
+                    {"status": "diverged", "ahead_by": -1, "behind_by": 1},
+                    {"status": "diverged", "ahead_by": 2, "behind_by": "3"},
+                    {"status": "unexpected", "ahead_by": 2, "behind_by": 3}):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    summarize(bad)
+
+    def test_branch_divergence_rejects_invalid_base_and_head(self):
+        with patch.object(portfolio_status, "request", return_value={
+            "head": {"sha": "a" * 40}, "base": {"ref": "refs/heads/main"}
+        }):
+            with self.assertRaises(ValueError):
+                portfolio_status.branch_drift_status("ai-office", 43)
+        with patch.object(portfolio_status, "request", return_value={
+            "head": {"sha": "not-a-sha"}, "base": {"ref": "main"}
+        }):
+            with self.assertRaises(ValueError):
+                portfolio_status.branch_drift_status("ai-office", 43)
+
+    def test_branch_divergence_table_fails_closed_on_compare_error(self):
+        with patch.object(portfolio_status, "BRANCH_DRIFT_PRS", (("ai-office", 43),)), \\
+             patch.object(portfolio_status, "branch_drift_status", side_effect=TimeoutError("compare unavailable")):
+            with contextlib.redirect_stdout(io.StringIO()) as output, \\
+                 contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(portfolio_status.render_branch_drift_queue(), 1)
+        self.assertIn("| unknown | unknown | unknown |", output.getvalue())
 
     def test_rejects_malformed_workflow_metadata_instead_of_reporting_success(self):
         sha = "a" * 40

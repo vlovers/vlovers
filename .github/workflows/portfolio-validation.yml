@@ -1,15 +1,21 @@
 name: Portfolio report validation
 
+# Read-only checks. Documentation-only updates must also receive a fresh run.
+
 on:
   push:
     paths:
       - 'scripts/portfolio_status.py'
       - 'tests/test_portfolio_status.py'
+      - 'docs/ENGINEERING_PORTFOLIO.md'
+      - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
       - '.github/workflows/portfolio-validation.yml'
   pull_request:
     paths:
       - 'scripts/portfolio_status.py'
       - 'tests/test_portfolio_status.py'
+      - 'docs/ENGINEERING_PORTFOLIO.md'
+      - 'docs/ENGINEERING_ROLLOUT_AUDIT.md'
       - '.github/workflows/portfolio-validation.yml'
 
 permissions:

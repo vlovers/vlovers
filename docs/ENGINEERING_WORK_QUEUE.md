@@ -4,6 +4,19 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+### Changed-file overlap re-audit — 2026-10-24
+
+Read-only full paginated PR filename lists were rechecked at the exact heads below. This confirms *filename intersections*, not semantic compatibility or merge authorization.
+
+| PR pair | Head SHA evidence | Intersection | Integration follow-up |
+| --- | --- | --- | --- |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) / [#69](https://github.com/vlovers/mutation-boundary/pull/69) | `d901cc88697a0e3008f866d32b6385f17342d52d` / `8b830e3fe622d52bf4d3bdc47803d526c8b95e99` | `CONTRIBUTING.md` | Reconcile contributor instructions after #68 before #69 |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) / [#70](https://github.com/vlovers/mutation-boundary/pull/70) | `d901cc88697a0e3008f866d32b6385f17342d52d` / `4e67f8b95c539145dd5516fafdfd2d250f43d9f8` | `README.md`, `docs/RELEASING.md` | Preserve current release documentation and recheck workflow assumptions |
+| [MutationBoundary #69](https://github.com/vlovers/mutation-boundary/pull/69) / [#70](https://github.com/vlovers/mutation-boundary/pull/70) | `8b830e3fe622d52bf4d3bdc47803d526c8b95e99` / `4e67f8b95c539145dd5516fafdfd2d250f43d9f8` | None | Still validate CI and integration after predecessor merges |
+| [Grid Atlas #271](https://github.com/vlovers/grid-atlas/pull/271) / [#272](https://github.com/vlovers/grid-atlas/pull/272) | `6c93c1c872193d809418430e3e661ebb338f38dd` / `1c22563d0ec0de332e5bfd2082e74f6108cf3350` | None | #272's failing accessibility workflow remains an independent blocker |
+
+All four pair checks must be repeated if either PR head changes. These are not claims that sequential merges will be conflict-free.
+
 ### Latest exact-head gate recheck — 2026-10-24
 
 - **Grid Atlas [#272](https://github.com/vlovers/grid-atlas/pull/272):** head `1c22563d0ec0de332e5bfd2082e74f6108cf3350` unchanged; exact-head workflow `Unified archive experience` still concludes `failure`, while `Next.js web` is `cancelled`. Do not infer full green CI from the successful sibling workflows. Accessibility reflow remains with the product agent.

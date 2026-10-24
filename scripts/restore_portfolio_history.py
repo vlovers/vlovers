@@ -13,19 +13,39 @@ import zipfile
 
 
 def select_previous_artifact(payload, current_run_id):
-    artifacts = payload.get("artifacts", [])
-    if not isinstance(artifacts, list):
+    """Select only well-formed, non-expired artifacts from a different run."""
+    if not isinstance(payload, dict) or not isinstance(payload.get("artifacts"), list):
         raise ValueError("Invalid artifacts payload")
-    candidates = [
-        a for a in artifacts
-        if isinstance(a, dict)
-        and a.get("name") == "engineering-portfolio-snapshot"
-        and not a.get("expired")
-        and isinstance(a.get("workflow_run"), dict)
-        and a["workflow_run"].get("id") != current_run_id
-        and type(a.get("id")) is int
-    ]
-    return max(candidates, key=lambda a: (a.get("created_at") or "", a["id"]), default=None)
+    if type(current_run_id) is not int or current_run_id < 1:
+        raise ValueError("Invalid current Actions run ID")
+    candidates = []
+    for artifact in payload["artifacts"]:
+        if not isinstance(artifact, dict):
+            raise ValueError("Malformed Actions artifact")
+        if artifact.get("name") != "engineering-portfolio-snapshot":
+            continue
+        if artifact.get("expired") is not False:
+            continue
+        workflow_run = artifact.get("workflow_run")
+        if not isinstance(workflow_run, dict):
+            continue
+        previous_run_id = workflow_run.get("id")
+        artifact_id = artifact.get("id")
+        created_at = artifact.get("created_at")
+        if type(previous_run_id) is not int or previous_run_id < 1:
+            continue
+        if previous_run_id == current_run_id:
+            continue
+        if type(artifact_id) is not int or artifact_id < 1:
+            continue
+        if not isinstance(created_at, str) or not created_at.endswith("Z"):
+            continue
+        try:
+            parsed = datetime.datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        candidates.append((parsed, artifact_id, artifact))
+    return max(candidates, key=lambda item: (item[0], item[1]))[2] if candidates else None
 
 
 def extract_history(data):

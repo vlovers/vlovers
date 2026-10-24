@@ -4,6 +4,13 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+## Live follow-up — 2026-10-24 (observations, not clearance)
+
+- **Central portfolio #2:** previous head `e505fe52ea8764ec87262c3914b7a29949f2163a` passed its exact-head Actions run. Recheck after this documentation update.
+- **AI Office #43/#48/#49:** current heads remained `3eb4eaae2b8c7af7e788d1d4feb14602e0d7ea92`, `345706befe81bafe35334bd73cf792ad22d584a9`, `36f01c4bd879e4584634b4df827481d40df49d13`; each had an observed successful Actions run, and a later GitHub read returned `mergeable=true`. Earlier false observations remain historical, not evidence of a stable conflict. Human review and dependency order still required.
+- **Last Chapter draft #5:** head moved rapidly through `3eff22ad2c4f6424f31aa8ce82c1435d2f1e84ee` (two `action_required` workflow conclusions) to `f305bfda994747aa7aac6a232141a53a7c11aa8b` (CI in progress and formatting workflow queued). Do not confuse checks from earlier commits with current-head verification. Owner/agent must resolve any GitHub Actions approval gate and demonstrate green current-head CI.
+- **Grid Atlas #272:** unchanged failing accessibility run on the audited SHA; the product agent owns reflow correction.
+
 ## Fresh integration watch — 2026-10-24 (recheck after every push)
 
 - **Last Chapter draft #5** advanced to `2cfc336a9e5d88205643c347032c46a98bfbf954`; two exact-head Actions runs were queued at observation. Earlier formatting failure applies to the *previous* SHA only. Do not call this fixed until current-head runs complete; product agent owns content and formatting.

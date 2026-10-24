@@ -111,3 +111,5 @@ History continuity safety: the scheduled workflow appends a new history entry on
 History artifact discovery validates candidate artifact IDs, originating run IDs and parseable creation timestamps before ordering candidates. Invalid candidates are skipped, and the current run is excluded; a candidate's presence alone does not certify that its ZIP contains valid history (that is checked separately).
 
 Historical attention counts include `action_required` alongside CI failure, pending, review and unknown states. This is essential for GitHub Actions approval-gated PRs: the history collector must not reject a valid snapshot simply because a workflow requires human action.
+
+Artifact selection requires parseable UTC `created_at` timestamps (GitHub's `Z` form); timezone-naive or non-UTC metadata is ignored rather than compared inconsistently across artifact pages.

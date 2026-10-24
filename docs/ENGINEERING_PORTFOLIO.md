@@ -91,3 +91,5 @@ Duplicate `(repository, PR number)` records are rejected both by the complete Ma
 The file-overlap audit builder applies the same duplicate-identity and malformed-record rejection as the main report and dependency builder. Conflicting copies of one PR cannot overwrite overlap freshness evidence.
 
 The attention classifier treats malformed review observations (including lists, objects, null, and numbers) as `unknown` after higher-priority verified CI/integration blockers. It never interprets untrusted review metadata as an approval.
+
+PR attention classification also requires a recognized PR state and a valid full 40-character hexadecimal head SHA for open PRs. Missing fields, malformed records, or invalid head identities yield `unknown` rather than a review-ready classification.

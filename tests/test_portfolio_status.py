@@ -52,6 +52,15 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(portfolio_status.summarize_workflow_runs(response, sha),
                          "action required observed")
 
+    def test_failure_takes_precedence_over_action_required(self):
+        sha = "a" * 40
+        response = {"total_count": 2, "workflow_runs": [
+            {"head_sha": sha, "status": "completed", "conclusion": "action_required"},
+            {"head_sha": sha, "status": "completed", "conclusion": "failure"},
+        ]}
+        self.assertEqual(portfolio_status.summarize_workflow_runs(response, sha),
+                         "failure observed")
+
     def test_json_snapshot_has_stable_schema_and_exact_sha_observations(self):
         sha = "a" * 40
 

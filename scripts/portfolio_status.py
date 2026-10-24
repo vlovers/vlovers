@@ -259,15 +259,23 @@ def render_branch_drift_queue():
 def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
     """Count all pages conservatively; never silently truncate a large queue."""
     count = 0
+    seen_numbers = set()
     for page in range(1, 21):
         items = request(f"/repos/{owner_repo}/{endpoint}?state=open&per_page=100&page={page}")
-        if not isinstance(items, list) or any(
+        if not isinstance(items, list) or len(items) > 100 or any(
             not isinstance(item, dict) or type(item.get("number")) is not int
             or item["number"] <= 0
+            or ("pull_request" in item and not isinstance(item["pull_request"], dict))
             for item in items
         ):
             raise ValueError(f"Malformed {endpoint} listing")
-        count += sum(not (exclude_pull_requests and "pull_request" in item) for item in items)
+        for item in items:
+            number = item["number"]
+            if number in seen_numbers:
+                raise ValueError(f"Duplicate {endpoint} item across pages")
+            seen_numbers.add(number)
+            if not (exclude_pull_requests and "pull_request" in item):
+                count += 1
         if len(items) < 100:
             return count
     raise ValueError(f"{endpoint} pagination exceeded safety limit")

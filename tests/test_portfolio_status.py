@@ -313,15 +313,15 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(validate("a" * 40), "a" * 40)
         self.assertEqual(validate("A" * 40), "A" * 40)
         for invalid in (None, True, 123, "a" * 39, "a" * 41, "g" * 40,
-                        "a" * 40 + "\\n", ["a" * 40]):
+                        "a" * 40 + "\n", ["a" * 40]):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 validate(invalid)
 
     def test_release_metadata_cannot_inject_markdown_rows(self):
         sanitize = portfolio_status.safe_markdown_cell
-        self.assertEqual(sanitize("v1.2.3|untrusted"), r"v1.2.3\\|untrusted")
-        for invalid in (None, "", True, 123, "v1\\n| forged | pass |",
-                        "v1\\rforged", "x" * 256):
+        self.assertEqual(sanitize("v1.2.3|untrusted"), r"v1.2.3\|untrusted")
+        for invalid in (None, "", True, 123, "v1\n| forged | pass |",
+                        "v1\rforged", "x" * 256):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 sanitize(invalid)
 
@@ -357,12 +357,12 @@ class PortfolioStatusTests(unittest.TestCase):
             if path.endswith("/commits/develop"):
                 return {"sha": "invalid"}
             raise AssertionError(path)
-        with patch.object(portfolio_status, "REPOSITORIES", ("estima",)), \\
-             patch.object(portfolio_status, "FOUNDATION_PRS", ()), \\
-             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \\
-             patch.object(portfolio_status, "BRANCH_DRIFT_PRS", ()), \\
+        with patch.object(portfolio_status, "REPOSITORIES", ("estima",)), \
+             patch.object(portfolio_status, "FOUNDATION_PRS", ()), \
+             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \
+             patch.object(portfolio_status, "BRANCH_DRIFT_PRS", ()), \
              patch.object(portfolio_status, "request", side_effect=fake_request):
-            with contextlib.redirect_stdout(io.StringIO()) as output, \\
+            with contextlib.redirect_stdout(io.StringIO()) as output, \
                  contextlib.redirect_stderr(io.StringIO()):
                 self.assertEqual(portfolio_status.main(), 1)
         self.assertIn("| estima | unknown | unknown | unknown | unknown |", output.getvalue())

@@ -311,6 +311,38 @@ def count_open_items(owner_repo, endpoint, exclude_pull_requests=False):
 
 
 
+
+def classify_pr_attention(record):
+    """Deterministic triage from observed evidence, never merge authorization."""
+    if record["state"] == "merged":
+        return "closed"
+    if record["state"] == "closed":
+        return "closed"
+    if record["state"] != "open" or record["head_sha"] is None:
+        return "unknown"
+    workflow = record["workflow_observation"]
+    review = record["review_observation"]
+    mergeability = record["mergeability_observation"]
+    if workflow == "failure observed":
+        return "ci_failure"
+    if review == "changes requested observed (not cleared)":
+        return "changes_requested"
+    if mergeability == "not mergeable observed (investigate)":
+        return "integration_blocker"
+    if workflow == "pending":
+        return "ci_pending"
+    if not isinstance(workflow, str) or not re.fullmatch(
+        r"[1-9][0-9]*/[1-9][0-9]* observed success", workflow
+    ):
+        return "unknown"
+    if review == "no head-SHA non-author approval observed" or (
+        isinstance(review, str) and review.startswith("historical approvals only")
+    ):
+        return "review_needed"
+    return "review_observed_not_authorized"
+
+
+
 def build_snapshot():
     """Machine-readable observations; errors stay explicit and fail the CLI."""
     snapshot = {"schema_version": 1, "owner": OWNER, "repositories": [], "tracked_prs": [], "errors": []}
@@ -357,6 +389,7 @@ def build_snapshot():
                 TimeoutError, ValueError) as exc:
             snapshot["errors"].append({"target": f"{OWNER}/{name}#{number}",
                                        "error_type": type(exc).__name__})
+        record["attention"] = classify_pr_attention(record)
         snapshot["tracked_prs"].append(record)
     return snapshot
 

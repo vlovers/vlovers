@@ -34,6 +34,20 @@ class PortfolioStatusTests(unittest.TestCase):
                        dict(valid, state="unexpected")):
             self.assertEqual(classify(record), "unknown")
 
+    def test_success_counts_must_match_and_state_must_be_scalar(self):
+        classify = portfolio_status.classify_pr_attention
+        valid = {"state": "open", "head_sha": "a" * 40,
+                 "workflow_observation": "1/1 observed success",
+                 "review_observation": "no head-SHA non-author approval observed",
+                 "mergeability_observation": "mergeable observed (not clearance)"}
+        self.assertEqual(classify(valid), "review_needed")
+        for workflow in ("1/2 observed success", "2/1 observed success",
+                         "01/01 observed success", "0/0 observed success"):
+            self.assertEqual(classify(dict(valid, workflow_observation=workflow)),
+                             "unknown")
+        for state in ([], {}, ["open"]):
+            self.assertEqual(classify(dict(valid, state=state)), "unknown")
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

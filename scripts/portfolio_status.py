@@ -142,7 +142,7 @@ def foundation_pr_status(name, number):
 def render_pr_queue(title, entries, show_lane=False):
     """Render a tracked queue; return count of failed lookups (unknown != green)."""
     errors = 0
-    print(f"\\n## {title}")
+    print(f"\n## {title}")
     lane_column = " | Lane" if show_lane else ""
     print(f"| Repository / PR{lane_column} | State | Head SHA | Observed PR workflow runs | Review observation |")
     print("| ---" + (" | ---" if show_lane else "") + " | --- | --- | --- | --- |")

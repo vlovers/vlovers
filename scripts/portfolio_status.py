@@ -36,11 +36,16 @@ def request(path):
 def main():
     errors = 0
     print("# Portfolio GitHub status (live read-only query)\n")
-    print("| Repository | Open PRs | Open issues | Latest GitHub release |")
-    print("| --- | ---: | ---: | --- |")
+    print("| Repository | Default branch HEAD | Open PRs | Open issues | Latest GitHub release |")
+    print("| --- | --- | ---: | ---: | --- |")
     for name in REPOSITORIES:
         owner_repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
         try:
+            metadata = request(f"/repos/{owner_repo}")
+            branch = metadata["default_branch"]
+            commit = request(f"/repos/{owner_repo}/commits/{urllib.parse.quote(branch, safe='')}")
+            head_sha = commit["sha"]
+            head = f"[{head_sha[:10]}](https://github.com/{OWNER}/{name}/commit/{head_sha})"
             # GitHub issue listings include PRs: count issue records without pull_request.
             # Pagination avoids silently reporting first-page counts as totals.
             issue_count = 0
@@ -65,9 +70,9 @@ def main():
                 if exc.code != 404:
                     raise
                 release = "none"
-            print(f"| [{name}](https://github.com/{OWNER}/{name}) | {pr_count} | {issue_count} | {release} |")
+            print(f"| [{name}](https://github.com/{OWNER}/{name}) | {head} | {pr_count} | {issue_count} | {release} |")
         except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
-            print(f"| {name} | unknown | unknown | unknown |")
+            print(f"| {name} | unknown | unknown | unknown | unknown |")
             print(f"Warning: could not read {name}: {exc}", file=sys.stderr)
             errors += 1
     if errors:

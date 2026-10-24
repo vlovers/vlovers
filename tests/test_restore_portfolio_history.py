@@ -25,6 +25,26 @@ class RestoreHistoryTests(unittest.TestCase):
         ]}
         self.assertEqual(select_previous_artifact(payload, 12)["id"], 2)
 
+    def test_select_ignores_invalid_artifact_metadata(self):
+        payload = {"artifacts": [
+            {"id": 7, "name": "engineering-portfolio-snapshot",
+             "created_at": ["invalid"], "expired": False,
+             "workflow_run": {"id": 10}},
+            {"id": 8, "name": "engineering-portfolio-snapshot",
+             "created_at": "not-a-date", "expired": False,
+             "workflow_run": {"id": 10}},
+            {"id": 9, "name": "engineering-portfolio-snapshot",
+             "created_at": "2026-10-24T00:00:00Z", "expired": False,
+             "workflow_run": {"id": True}},
+            {"id": 10, "name": "engineering-portfolio-snapshot",
+             "created_at": "2026-10-24T00:00:00Z", "expired": False,
+             "workflow_run": {"id": 10}},
+        ]}
+        self.assertEqual(select_previous_artifact(payload, 11)["id"], 10)
+        self.assertIsNone(select_previous_artifact({"artifacts": payload["artifacts"][:3]}, 11))
+        with self.assertRaises(ValueError):
+            select_previous_artifact({"artifacts": []}, 0)
+
     def test_extracts_history_without_unzipping_paths(self):
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w") as archive:

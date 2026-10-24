@@ -101,6 +101,15 @@ class DashboardTests(unittest.TestCase):
         ])
         self.assertIn("unknown (invalid head SHA)", rows[0])
 
+    def test_duplicate_pr_records_fail_closed(self):
+        item = {"repository": "vlovers/ai-office", "number": 43,
+                "state": "open", "attention": "review_needed",
+                "days_since_update": 0, "workflow_observation": None}
+        snapshot = {"schema_version": 1, "repositories": [],
+                    "errors": [], "tracked_prs": [item, dict(item)]}
+        with self.assertRaisesRegex(ValueError, "Duplicate PR"):
+            render(snapshot)
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

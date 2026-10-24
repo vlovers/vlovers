@@ -49,13 +49,14 @@ jobs:
             python3 scripts/restore_portfolio_history.py
           fi
       - name: Build current history entry
+        id: build_history
         if: ${{ always() && steps.restore_history.outcome == 'success' }}
         run: |
           if test -s portfolio-snapshot.json; then
             python3 scripts/portfolio_history.py portfolio-snapshot.json --history portfolio-history.json
           fi
       - name: Upload complete snapshot and history
-        if: ${{ always() && steps.restore_history.outcome == 'success' && hashFiles('portfolio-history.json') != '' }}
+        if: ${{ always() && steps.restore_history.outcome == 'success' && steps.build_history.outcome == 'success' && hashFiles('portfolio-history.json') != '' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: engineering-portfolio-snapshot
@@ -66,7 +67,7 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
       - name: Upload diagnostic snapshot without history
-        if: ${{ always() && hashFiles('portfolio-history.json') == '' }}
+        if: ${{ always() && (steps.restore_history.outcome != 'success' || steps.build_history.outcome != 'success' || hashFiles('portfolio-history.json') == '') }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: engineering-portfolio-diagnostic

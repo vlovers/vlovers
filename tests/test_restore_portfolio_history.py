@@ -14,7 +14,11 @@ class RestoreHistoryTests(unittest.TestCase):
         workflow = Path(".github/workflows/portfolio-snapshot.yml").read_text(encoding="utf-8")
         self.assertIn("id: restore_history", workflow)
         self.assertIn("steps.restore_history.outcome == 'success'", workflow)
-        self.assertIn("name: Upload snapshot even when some GitHub queries fail", workflow)
+        self.assertIn("name: Upload complete snapshot and history", workflow)
+        self.assertIn("name: Upload diagnostic snapshot without history", workflow)
+        self.assertIn("name: engineering-portfolio-diagnostic", workflow)
+        self.assertIn("hashFiles('portfolio-history.json') != ''", workflow)
+        self.assertIn("hashFiles('portfolio-history.json') == ''", workflow)
 
     def test_selects_latest_nonexpired_prior_run(self):
         payload = {"artifacts": [

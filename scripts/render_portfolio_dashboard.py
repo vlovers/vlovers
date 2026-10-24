@@ -31,8 +31,14 @@ DEPENDENCY_CHAINS = (
 
 def dependency_rows(prs):
     """Show known integration order without claiming a PR is safe to merge."""
-    states = {(p.get("repository"), p.get("number")): p.get("state")
-              for p in prs if isinstance(p, dict)}
+    states = {}
+    for p in prs:
+        if not isinstance(p, dict):
+            raise ValueError("Malformed dependency PR record")
+        state = p.get("state")
+        if state is not None and state not in {"open", "closed", "merged"}:
+            raise ValueError("Invalid dependency PR state")
+        states[(p.get("repository"), p.get("number"))] = state
     rows = []
     for repo, numbers in DEPENDENCY_CHAINS:
         for index, number in enumerate(numbers):

@@ -85,3 +85,5 @@ Review transitions are processed in GitHub's chronological review order. A `DISM
 ### Dashboard snapshot input validation
 
 The offline renderer rejects unexpected PR dependency states instead of interpolating them into Markdown. Overlap-audit freshness requires valid 40-character hexadecimal head SHAs; malformed SHAs produce `unknown (invalid head SHA)` rather than a false current/stale conclusion. The report remains advisory and must not be treated as merge clearance.
+
+Duplicate `(repository, PR number)` records are rejected both by the complete Markdown renderer and the dependency-row builder. Conflicting copies of one PR cannot silently overwrite each other or change the advisory integration order.

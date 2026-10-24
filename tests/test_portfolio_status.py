@@ -48,6 +48,20 @@ class PortfolioStatusTests(unittest.TestCase):
         for state in ([], {}, ["open"]):
             self.assertEqual(classify(dict(valid, state=state)), "unknown")
 
+    def test_unhashable_triage_observations_remain_unknown(self):
+        base = {"state": "open", "head_sha": "a" * 40,
+                "workflow_observation": "1/1 observed success",
+                "review_observation": "no head-SHA non-author approval observed",
+                "mergeability_observation": "mergeable observed (not clearance)"}
+        for field in ("workflow_observation", "review_observation",
+                      "mergeability_observation"):
+            for invalid in ([], {}, None):
+                result = portfolio_status.classify_pr_attention(
+                    dict(base, **{field: invalid}))
+                self.assertIn(result, {"unknown", "review_needed"})
+                if field != "mergeability_observation":
+                    self.assertEqual(result, "unknown")
+
     def test_pr_inactivity_age_uses_utc_and_rejects_invalid_evidence(self):
         import datetime
         now = datetime.datetime(2026, 10, 24, 12, tzinfo=datetime.timezone.utc)

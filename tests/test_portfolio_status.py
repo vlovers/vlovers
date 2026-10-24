@@ -30,6 +30,8 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(classify(base), "review_needed")
         self.assertEqual(classify(dict(base, workflow_observation="failure observed")),
                          "ci_failure")
+        self.assertEqual(classify(dict(base, workflow_observation="action required observed")),
+                         "action_required")
         self.assertEqual(classify(dict(base, review_observation="changes requested observed (not cleared)")),
                          "changes_requested")
         self.assertEqual(classify(dict(base, mergeability_observation="not mergeable observed (investigate)")),
@@ -41,6 +43,14 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(classify(dict(base, state="merged")), "closed")
         self.assertEqual(classify(dict(base, review_observation="1 head-SHA non-author approval(s) observed (not acceptance)")),
                          "review_observed_not_authorized")
+
+    def test_action_required_is_not_misclassified_as_test_failure(self):
+        sha = "a" * 40
+        response = {"total_count": 1, "workflow_runs": [
+            {"head_sha": sha, "status": "completed", "conclusion": "action_required"}
+        ]}
+        self.assertEqual(portfolio_status.summarize_workflow_runs(response, sha),
+                         "action required observed")
 
     def test_json_snapshot_has_stable_schema_and_exact_sha_observations(self):
         sha = "a" * 40

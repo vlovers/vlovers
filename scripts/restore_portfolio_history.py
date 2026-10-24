@@ -19,10 +19,11 @@ def select_previous_artifact(payload, current_run_id):
         a for a in artifacts
         if a.get("name") == "engineering-portfolio-snapshot"
         and not a.get("expired")
-        and a.get("workflow_run", {}).get("id") != current_run_id
+        and isinstance(a.get("workflow_run"), dict)
+        and a["workflow_run"].get("id") != current_run_id
         and isinstance(a.get("id"), int)
     ]
-    return max(candidates, key=lambda a: a.get("created_at", ""), default=None)
+    return max(candidates, key=lambda a: (a.get("created_at") or "", a["id"]), default=None)
 
 
 def extract_history(data):
@@ -33,8 +34,16 @@ def extract_history(data):
         if len(members) != 1 or members[0].file_size > 1_000_000:
             raise ValueError("Missing or oversized history in artifact")
         history = json.loads(archive.read(members[0]).decode("utf-8"))
-        if not isinstance(history, list):
+        if not isinstance(history, list) or len(history) > 365:
             raise ValueError("Invalid history data")
+        previous = ""
+        for entry in history:
+            if not isinstance(entry, dict) or not isinstance(entry.get("observed_at"), str):
+                raise ValueError("Invalid history entry")
+            timestamp = entry["observed_at"]
+            if not timestamp.endswith("Z") or timestamp <= previous:
+                raise ValueError("Unordered history entries")
+            previous = timestamp
         return history
 
 
@@ -53,8 +62,16 @@ def main():
     if not all(repo.split("/")) or repo.count("/") != 1:
         raise ValueError("Invalid repository")
     endpoint = f"https://api.github.com/repos/{repo}/actions/artifacts?per_page=100"
-    payload = json.loads(api(endpoint, token))
-    artifact = select_previous_artifact(payload, run_id)
+    artifact = None
+    for page in range(1, 6):
+        payload = json.loads(api(f"{endpoint}&page={page}", token))
+        candidate = select_previous_artifact(payload, run_id)
+        if candidate is not None and (artifact is None or
+                (candidate.get("created_at") or "", candidate["id"]) >
+                (artifact.get("created_at") or "", artifact["id"])):
+            artifact = candidate
+        if len(payload.get("artifacts", [])) < 100:
+            break
     if artifact is None:
         print("No previous snapshot artifact; beginning new history.")
         return

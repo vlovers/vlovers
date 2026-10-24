@@ -107,7 +107,10 @@ def summarize_workflow_runs(response, expected_sha):
             raise ValueError("Invalid Actions run conclusion")
         if conclusion not in valid_conclusions:
             raise ValueError("Unknown Actions run conclusion")
-    failed = {"failure", "timed_out", "cancelled", "action_required", "startup_failure"}
+    blocked = {"action_required"}
+    if any(run.get("conclusion") in blocked for run in runs):
+        return "action required observed"
+    failed = {"failure", "timed_out", "cancelled", "startup_failure"}
     if any(run.get("conclusion") in failed for run in runs):
         return "failure observed"
     if any(run.get("status") != "completed" for run in runs):
@@ -324,6 +327,8 @@ def classify_pr_attention(record):
     workflow = record["workflow_observation"]
     review = record["review_observation"]
     mergeability = record["mergeability_observation"]
+    if workflow == "action required observed":
+        return "action_required"
     if workflow == "failure observed":
         return "ci_failure"
     if review == "changes requested observed (not cleared)":

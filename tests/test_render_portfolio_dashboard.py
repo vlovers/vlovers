@@ -116,6 +116,13 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate dependency"):
             dependency_rows([item, dict(item, state="merged")])
 
+    def test_unhashable_pr_identity_fails_with_validation_error(self):
+        snapshot = {"schema_version": 1, "repositories": [], "errors": [],
+                    "tracked_prs": [{"repository": ["vlovers/ai-office"],
+                                     "number": 43, "attention": "unknown"}]}
+        with self.assertRaisesRegex(ValueError, "Invalid PR identity"):
+            render(snapshot)
+
     def test_marks_incomplete_query_evidence(self):
         snapshot = {"schema_version": 1, "repositories": [], "tracked_prs": [],
                     "errors": [{"target": "vlovers/estima", "error_type": "URLError"}]}

@@ -208,7 +208,7 @@ def branch_drift_status(name, number):
 def render_branch_drift_queue():
     """Report integration risk without interpreting divergence as a merge conflict."""
     errors = 0
-    print("\\n## AI Office branch freshness — live base ref (not merge clearance)")
+    print("\n## AI Office branch freshness — live base ref (not merge clearance)")
     print("| PR | Head SHA | Base branch | Commit divergence |")
     print("| --- | --- | --- | --- |")
     for name, number in BRANCH_DRIFT_PRS:

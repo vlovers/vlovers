@@ -4,6 +4,12 @@ Updated 2026-10-24. This is a **coordination backlog**, not product implementati
 
 ## Current observations and superseded audit notes
 
+## Fresh integration watch — 2026-10-24 (recheck after every push)
+
+- **Last Chapter draft #5** advanced to `2cfc336a9e5d88205643c347032c46a98bfbf954`; two exact-head Actions runs were queued at observation. Earlier formatting failure applies to the *previous* SHA only. Do not call this fixed until current-head runs complete; product agent owns content and formatting.
+- **AI Office #43 / #48 / #49** remain at heads `3eb4eaae2b8c7af7e788d1d4feb14602e0d7ea92`, `345706befe81bafe35334bd73cf792ad22d584a9`, `36f01c4bd879e4584634b4df827481d40df49d13`. Each had one successful observed exact-head run, but GitHub now reports `mergeable=false` for all three. This differs from the earlier true recheck and must be investigated as a transient or real integration blocker; success is not merge clearance.
+- **Grid Atlas #272** remains at `1c22563d0ec0de332e5bfd2082e74f6108cf3350`, with 8 successful, 1 failed and 1 cancelled Actions observations. GitHub reports `mergeable=true`; the Ukrainian 200%-text reflow failure still blocks readiness.
+
 The dated snapshots below are historical evidence, not live merge clearance. The most recent rechecks supersede earlier mergeability readings; rerun exact-head CI and GitHub mergeability before any integration decision.
 
 ## Grid Atlas #272 failed-job root cause — 2026-10-24

@@ -175,6 +175,18 @@ def fetch_pr_metadata(name, number, cache=None):
     return pr
 
 
+def summarize_mergeability(pr):
+    """GitHub mergeability is transient; it is never merge authorization."""
+    value = pr.get("mergeable")
+    if value is True:
+        return "mergeable observed (not clearance)"
+    if value is False:
+        return "not mergeable observed (investigate)"
+    if value is None:
+        return "unknown (GitHub pending)"
+    raise ValueError("Malformed PR mergeability metadata")
+
+
 def foundation_pr_status(name, number, pr_cache=None):
     repo = urllib.parse.quote(OWNER + "/" + name, safe="/")
     pr = fetch_pr_metadata(name, number, pr_cache)
@@ -187,7 +199,7 @@ def foundation_pr_status(name, number, pr_cache=None):
     )
     author_login = (pr.get("user") or {}).get("login")
     review = summarize_review_evidence(fetch_pr_reviews(repo, number), sha, author_login)
-    return state, sha, summarize_workflow_runs(runs, sha), review
+    return state, sha, summarize_workflow_runs(runs, sha), review, summarize_mergeability(pr)
 
 
 def render_pr_queue(title, entries, show_lane=False, pr_cache=None):
@@ -195,17 +207,17 @@ def render_pr_queue(title, entries, show_lane=False, pr_cache=None):
     errors = 0
     print(f"\n## {title}")
     lane_column = " | Lane" if show_lane else ""
-    print(f"| Repository / PR{lane_column} | State | Head SHA | Observed PR workflow runs | Review observation |")
-    print("| ---" + (" | ---" if show_lane else "") + " | --- | --- | --- | --- |")
+    print(f"| Repository / PR{lane_column} | State | Head SHA | Observed PR workflow runs | Review observation | GitHub mergeability |")
+    print("| ---" + (" | ---" if show_lane else "") + " | --- | --- | --- | --- | --- |")
     for item in entries:
         name, number = item[:2]
         lane = f" | {item[2]}" if show_lane else ""
         label = f"[{name} #{number}](https://github.com/{OWNER}/{name}/pull/{number})"
         try:
-            state, sha, ci, review = foundation_pr_status(name, number, pr_cache)
-            print(f"| {label}{lane} | {state} | `{sha[:12]}` | {ci} | {review} |")
+            state, sha, ci, review, mergeability = foundation_pr_status(name, number, pr_cache)
+            print(f"| {label}{lane} | {state} | `{sha[:12]}` | {ci} | {review} | {mergeability} |")
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError, TimeoutError, ValueError) as exc:
-            print(f"| {label}{lane} | unknown | unknown | unknown | unknown |")
+            print(f"| {label}{lane} | unknown | unknown | unknown | unknown | unknown |")
             print(f"Warning: could not read tracked PR {name} #{number}: {exc}", file=sys.stderr)
             errors += 1
     return errors

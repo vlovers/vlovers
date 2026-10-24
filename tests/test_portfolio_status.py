@@ -284,6 +284,23 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(paths[-1], "/repos/vlovers/ai-office/compare/" + sha + "...main")
         self.assertNotIn("b" * 40, paths[-1])
 
+    def test_branch_divergence_uses_actual_develop_target_for_estima(self):
+        sha = "c" * 40
+        paths = []
+        def fake_request(path):
+            paths.append(path)
+            if path.endswith("/pulls/15"):
+                return {"head": {"sha": sha}, "base": {"ref": "develop"}}
+            if "/compare/" in path:
+                return {"status": "ahead", "ahead_by": 3, "behind_by": 0}
+            raise AssertionError(path)
+        with patch.object(portfolio_status, "request", side_effect=fake_request):
+            self.assertEqual(
+                portfolio_status.branch_drift_status("estima", 15),
+                (sha, "develop", "base-only 3; PR-only 0 (ahead)"),
+            )
+        self.assertEqual(paths[-1], "/repos/vlovers/estima/compare/" + sha + "...develop")
+
     def test_branch_divergence_counts_direction_and_equal_heads(self):
         summarize = portfolio_status.summarize_branch_divergence
         self.assertEqual(summarize({"status": "ahead", "ahead_by": 2, "behind_by": 0}),

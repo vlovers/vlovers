@@ -320,6 +320,7 @@ class PortfolioStatusTests(unittest.TestCase):
     def test_release_metadata_cannot_inject_markdown_rows(self):
         sanitize = portfolio_status.safe_markdown_cell
         self.assertEqual(sanitize("v1.2.3|untrusted"), r"v1.2.3\|untrusted")
+        self.assertEqual(sanitize("v1" + chr(92) + "|fake"), "v1" + chr(92) * 3 + "|fake")
         for invalid in (None, "", True, 123, "v1\n| forged | pass |",
                         "v1\rforged", "x" * 256):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
@@ -340,6 +341,21 @@ class PortfolioStatusTests(unittest.TestCase):
                 summarize([review], sha, "author")
         with self.assertRaises(ValueError):
             summarize([None], sha, "author")
+
+    def test_reviews_reject_missing_states_and_malformed_author(self):
+        sha = "a" * 40
+        valid = {"user": {"login": "reviewer", "type": "User"},
+                 "state": "APPROVED", "commit_id": sha}
+        summarize = portfolio_status.summarize_review_evidence
+        for bad in ({**valid, "state": None}, {**valid, "state": []},
+                    {**valid, "state": "APPROVE"}):
+            with self.assertRaises(ValueError):
+                summarize([bad], sha, "author")
+        for author in (None, True, 3, [], ""):
+            with self.assertRaises(ValueError):
+                summarize([valid], sha, author)
+        with self.assertRaises(ValueError):
+            summarize([valid], "invalid", "author")
 
     def test_workflow_total_count_boolean_is_not_accepted_as_complete(self):
         sha = "a" * 40

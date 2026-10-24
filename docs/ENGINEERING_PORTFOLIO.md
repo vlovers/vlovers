@@ -109,3 +109,5 @@ Known changed-file overlap warnings distinguish two open PRs from pairs containi
 History continuity safety: the scheduled workflow appends a new history entry only if restoration of the prior artifact succeeded (including the explicit first-run/no-artifact case). A restore error prevents the append step, avoiding a silent history reset; diagnostic snapshot/dashboard artifacts may still upload, and the workflow reports the failure.
 
 History artifact discovery validates candidate artifact IDs, originating run IDs and parseable creation timestamps before ordering candidates. Invalid candidates are skipped, and the current run is excluded; a candidate's presence alone does not certify that its ZIP contains valid history (that is checked separately).
+
+Historical attention counts include `action_required` alongside CI failure, pending, review and unknown states. This is essential for GitHub Actions approval-gated PRs: the history collector must not reject a valid snapshot simply because a workflow requires human action.

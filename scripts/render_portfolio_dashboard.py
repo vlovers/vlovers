@@ -109,7 +109,10 @@ def render(snapshot):
     for item in prs:
         if not isinstance(item, dict):
             raise ValueError("Malformed PR record")
-        key = (item.get("repository"), item.get("number"))
+        repository, number = item.get("repository"), item.get("number")
+        if not isinstance(repository, str) or type(number) is not int:
+            raise ValueError("Invalid PR identity")
+        key = (repository, number)
         if key in seen_prs:
             raise ValueError("Duplicate PR in snapshot")
         seen_prs.add(key)

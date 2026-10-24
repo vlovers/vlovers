@@ -66,6 +66,22 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(portfolio_status.summarize_workflow_runs(response, sha),
                          "failure observed")
 
+    def test_dismissed_review_clears_prior_decisive_evidence(self):
+        sha = "a" * 40
+        def review(state):
+            return {"user": {"login": "reviewer", "type": "User"},
+                    "state": state, "commit_id": sha}
+        summarize = portfolio_status.summarize_review_evidence
+        self.assertEqual(summarize([review("APPROVED"), review("DISMISSED")],
+                                   sha, "author"),
+                         "no head-SHA non-author approval observed")
+        self.assertEqual(summarize([review("CHANGES_REQUESTED"), review("DISMISSED")],
+                                   sha, "author"),
+                         "no head-SHA non-author approval observed")
+        self.assertEqual(summarize([review("APPROVED"), review("DISMISSED"),
+                                    review("APPROVED")], sha, "author"),
+                         "1 head-SHA non-author approval(s) observed (not acceptance)")
+
     def test_json_snapshot_has_stable_schema_and_exact_sha_observations(self):
         sha = "a" * 40
 

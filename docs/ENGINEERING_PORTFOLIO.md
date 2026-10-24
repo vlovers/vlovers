@@ -103,3 +103,5 @@ Actions lifecycle metadata is validated for consistency: a completed workflow mu
 Exact-head Actions verification requires a valid 40-character hexadecimal target commit SHA before any workflow run is considered. Missing, abbreviated, or malformed target SHAs raise validation errors rather than producing a misleading observation.
 
 The offline Markdown renderer validates scalar attention categories and dependency states before membership checks. Malformed list/object values produce explicit validation errors rather than an unhandled type exception or misleading report.
+
+Known changed-file overlap warnings distinguish two open PRs from pairs containing a closed PR (integration scope must be re-evaluated), a merged PR (re-audit against the new base), or unknown/invalid PR state (no manual-reconciliation conclusion). Dependency and overlap renderers reject nonpositive PR identifiers.

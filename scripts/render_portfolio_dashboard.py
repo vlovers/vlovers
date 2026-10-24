@@ -17,6 +17,39 @@ ATTENTION = {
 }
 
 
+
+# Explicit engineering review order; not inferred from GitHub mergeability.
+DEPENDENCY_CHAINS = (
+    ("vlovers/ai-office", (43, 48, 49)),
+    ("vlovers/rulewitness", (82, 83)),
+    ("vlovers/mutation-boundary", (68, 69, 70)),
+    ("vlovers/estima", (13, 14, 15)),
+    ("vlovers/grid-atlas", (271, 272)),
+)
+
+
+def dependency_rows(prs):
+    """Show known integration order without claiming a PR is safe to merge."""
+    states = {(p.get("repository"), p.get("number")): p.get("state")
+              for p in prs if isinstance(p, dict)}
+    rows = []
+    for repo, numbers in DEPENDENCY_CHAINS:
+        for index, number in enumerate(numbers):
+            predecessor = numbers[index - 1] if index else None
+            prior_state = states.get((repo, predecessor)) if predecessor else None
+            if predecessor is None:
+                dependency = "first in lane"
+            elif prior_state == "merged":
+                dependency = f"predecessor #{predecessor} merged (recheck head CI)"
+            elif prior_state is None:
+                dependency = f"predecessor #{predecessor} unknown"
+            else:
+                dependency = f"await predecessor #{predecessor} ({prior_state})"
+            rows.append(f"| [{repo}#{number}](https://github.com/{repo}/pull/{number}) | {dependency} |")
+    return rows
+
+
+
 def render(snapshot):
     if not isinstance(snapshot, dict) or snapshot.get("schema_version") != 1:
         raise ValueError("Unsupported snapshot schema")
@@ -50,6 +83,9 @@ def render(snapshot):
             raise ValueError("Unsafe CI observation")
         label = f"[{repo}#{number}](https://github.com/{repo}/pull/{number})"
         lines.append(f"| {label} | {ATTENTION[attention]} | {age if age is not None else 'unknown'} | {ci or 'unknown'} |")
+    lines.extend(["", "## Integration dependencies (advisory)", "",
+                  "| PR | Dependency observation |", "| --- | --- |"])
+    lines.extend(dependency_rows(prs))
     if errors:
         lines.extend(["", "**Incomplete data:** one or more GitHub queries failed. Missing observations are unknown."])
     return "\n".join(lines) + "\n"

@@ -26,6 +26,49 @@ class DashboardTests(unittest.TestCase):
         self.assertIn("Unknown | unknown | unknown", result)
         self.assertIn("Never merge or release", result)
 
+    def test_dashboard_shows_live_review_mergeability_and_base_drift(self):
+        snapshot = {
+            "schema_version": 1, "repositories": [], "errors": [],
+            "tracked_prs": [{
+                "repository": "vlovers/estima", "number": 13,
+                "attention": "review_needed", "days_since_update": 1,
+                "workflow_observation": "2/2 observed success",
+                "review_observation": "no head-SHA non-author approval observed",
+                "mergeability_observation": "mergeable observed (not clearance)",
+                "base_branch": "develop",
+                "branch_divergence": "base-only 4; PR-only 12 (diverged)",
+            }],
+        }
+        output = render(snapshot)
+        self.assertIn("Review observation | Mergeability | Live base drift", output)
+        self.assertIn("no head-SHA non-author approval observed", output)
+        self.assertIn("mergeable observed (not clearance)", output)
+        self.assertIn("develop: base-only 4; PR-only 12 (diverged)", output)
+
+    def test_dashboard_rejects_untrusted_live_observation_cells(self):
+        item = {
+            "repository": "vlovers/ai-office", "number": 43,
+            "attention": "review_needed", "days_since_update": 0,
+            "workflow_observation": "1/1 observed success",
+            "review_observation": "no head-SHA non-author approval observed",
+            "mergeability_observation": "mergeable observed (not clearance)",
+            "base_branch": "main",
+            "branch_divergence": "base-only 3; PR-only 1 (diverged)",
+        }
+        base = {"schema_version": 1, "repositories": [], "errors": []}
+        for field, invalid in (
+            ("workflow_observation", "success|forged"),
+            ("review_observation", "approved<unsafe>"),
+            ("mergeability_observation", "mergeable\\nforged"),
+            ("base_branch", "main|forged"),
+            ("branch_divergence", "base-only 0|forged"),
+            ("branch_divergence", ["invalid"]),
+        ):
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                render(dict(base, tracked_prs=[dict(item, **{field: invalid})]))
+        with self.assertRaises(ValueError):
+            render(dict(base, tracked_prs=[dict(item, base_branch=None)]))
+
     def test_rejects_unsafe_or_invalid_records(self):
         base = {"schema_version": 1, "repositories": [], "errors": [],
                 "tracked_prs": [{"repository": "vlovers/grid-atlas", "number": 1,

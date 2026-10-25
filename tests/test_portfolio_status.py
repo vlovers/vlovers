@@ -173,7 +173,7 @@ class PortfolioStatusTests(unittest.TestCase):
             if "/commits/main" in path:
                 return {"sha": sha}
             if "/releases/latest" in path:
-                return {"tag_name": "v1.0.0"}
+                return {"tag_name": "v1.0.0|[notes](https://example.com)"}
             if "/compare/" in path:
                 return {"status": "diverged", "ahead_by": 4, "behind_by": 2}
             if "/issues?" in path or "/pulls?" in path:
@@ -189,6 +189,8 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(len(snapshot["repositories"]), 7)
         self.assertEqual(len(snapshot["tracked_prs"]), 16)
         self.assertEqual(snapshot["repositories"][0]["head_sha"], sha)
+        self.assertEqual(snapshot["repositories"][0]["latest_release"],
+                         "v1.0.0|[notes](https://example.com)")
         self.assertEqual(snapshot["tracked_prs"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["attention"], "review_needed")
         self.assertEqual(snapshot["tracked_prs"][0]["base_branch"], "main")
@@ -678,6 +680,20 @@ class PortfolioStatusTests(unittest.TestCase):
         self.assertEqual(validate("A" * 40), "A" * 40)
         for invalid in (None, True, 123, "a" * 39, "a" * 41, "g" * 40,
                         "a" * 40 + "\n", ["a" * 40]):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                validate(invalid)
+
+    def test_release_tag_json_preserves_literal_value_and_markdown_escapes_links(self):
+        validate = portfolio_status.validate_github_text
+        sanitize = portfolio_status.safe_markdown_cell
+        tag = "v1.0.0|[notes](https://example.com)"
+        self.assertEqual(validate(tag), tag)
+        self.assertEqual(sanitize(tag),
+                         r"v1.0.0\|\[notes\]\(https://example.com\)")
+        self.assertEqual(sanitize("v1!<img src=x>`code`"),
+                         r"v1\!\<img src=x\>\`code\`")
+        for invalid in ("v1\u202ereverse", "v1\u200bhidden", "v1\u2028break",
+                        "v1\x85control"):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 validate(invalid)
 

@@ -1,3 +1,7 @@
+### AI Office #80 SHA release-label correction verified — 2026-10-25
+
+[Draft PR #80](https://github.com/vlovers/ai-office/pull/80) head `730c209d87d003eba58a7420ea7bc9eecce91f6d`: corrected both `actions/upload-artifact` comments to `v7.0.2` after confirming upstream commit provenance; immutable SHA unchanged. [CI run #40216038559](https://github.com/vlovers/ai-office/actions/runs/40216038559) **completed SUCCESS** in both Linux validation/browser and macOS native sandbox jobs. Compared to `main`: **5 ahead / 0 behind**, four expected files. Independent review count **0**. Keep Draft; no merge without independent review.
+
 ### AI Office #80 current-main integration verified — 2026-10-25
 
 [Draft PR #80](https://github.com/vlovers/ai-office/pull/80) ports #49's four-file immutable GitHub Actions pinning patch onto current `main` without replaying unrelated branch history. Head `1fc25bce858b4442b5e6985e9abb5e0e06b27470`, [CI run #40214687277](https://github.com/vlovers/ai-office/actions/runs/40214687277) **completed SUCCESS**: both validation/browser and native Codex policy jobs passed. Compared with main: **4 ahead / 0 behind**, exactly four files (validation.yml, package.json, SHA auditor, regression tests). **Zero submitted reviews**; Draft remains unmerged pending independent security/maintainer review. Supersedes the integration route through diverged #49; do not merge both PRs.

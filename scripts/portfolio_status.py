@@ -18,6 +18,7 @@ REPOSITORIES = (
     "rulewitness",
     "mutation-boundary",
     "estima",
+    "vlovers",  # Include the engineering dashboard repository itself.
     "last-chapter",
 )
 BASE = "https://api.github.com"
@@ -434,12 +435,25 @@ def build_snapshot():
                   "lane": lane[0] if lane else "foundation", "state": None,
                   "head_sha": None, "workflow_observation": None,
                   "review_observation": None, "mergeability_observation": None,
-                  "days_since_update": None}
+                  "days_since_update": None, "base_branch": None,
+                  "branch_divergence": None}
         try:
             state, sha, workflow, review, mergeability = foundation_pr_status(name, number, cache)
             record["days_since_update"] = pr_age_days(cache[(name, number)]["updated_at"])
             record.update(state=state, head_sha=sha, workflow_observation=workflow,
                           review_observation=review, mergeability_observation=mergeability)
+            # JSON consumers need the same live-base drift evidence as the
+            # Markdown report. Keep a failed compare explicit, never "clean".
+            if state == "open":
+                try:
+                    drift_head, live_base, drift = branch_drift_status(name, number, cache)
+                    if drift_head != sha:
+                        raise ValueError("PR head changed during snapshot")
+                    record.update(base_branch=live_base, branch_divergence=drift)
+                except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
+                        TimeoutError, ValueError) as exc:
+                    snapshot["errors"].append({"target": f"{OWNER}/{name}#{number}:compare",
+                                               "error_type": type(exc).__name__})
         except (KeyError, TypeError, urllib.error.HTTPError, urllib.error.URLError,
                 TimeoutError, ValueError) as exc:
             snapshot["errors"].append({"target": f"{OWNER}/{name}#{number}",

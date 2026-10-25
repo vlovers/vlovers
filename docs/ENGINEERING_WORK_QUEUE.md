@@ -13,6 +13,18 @@ This section supersedes the **current-state interpretations** in older dated not
 
 **Decision rule:** zero behind means no base-drift rebase is necessary *at this snapshot*, not that a PR is accepted. A green workflow, mergeability flag or AI-authored comment is not an independent `APPROVED` review. Do not merge without the required approval. Keep product-agent branches separate and never touch Frostline.
 
+### AI Office dependency and integration audit — 2026-10-25
+
+Live comparisons to `main` and complete changed-filename lists were checked for [#43](https://github.com/vlovers/ai-office/pull/43), [#48](https://github.com/vlovers/ai-office/pull/48), [#49](https://github.com/vlovers/ai-office/pull/49). Their **PR changed-file sets are pairwise disjoint** (6 / 4 / 4 files), but this does **not** establish safe automatic merges: cross-branch comparisons expose unrelated Delivery implementation changes in the histories. Preserve product work and do not transplant whole branches.
+
+| PR | Branch | Ahead / behind `main` | Files changed | Safe integration action |
+| --- | --- | --- | --- | --- |
+| [#43](https://github.com/vlovers/ai-office/pull/43) | `docs/ai-engineering-standard-v1` | 23 / 24 | Six governance documents | Independently review current contracts and approve before integration; verify exact-head CI |
+| [#48](https://github.com/vlovers/ai-office/pull/48) | `docs/issue-intake-standard-v1` | 18 / 21 | Issue templates, CONTRIBUTING, SECURITY | Recheck SECURITY against current Delivery ingress after #43; independent review and CI |
+| [#49](https://github.com/vlovers/ai-office/pull/49) | `ci/pin-checkout-setup-node` | 39 / 4 | Validation workflow, package script, action-pin checker and tests | Verify pins against current `main` workflows, then run exact-head CI and independent review |
+
+No files in these three PR diffs overlap directly. **Do not infer that this removes merge conflicts or review gates.** Prefer current-base integration candidates with only the intended file diffs after authorized independent acceptance, rather than blindly rebasing branches containing unrelated commits. The currently opened PRs remain unmerged; no CI on new heads was claimed by this audit.
+
 ---
 
 ### Current actionable CI handoffs — 2026-10-24

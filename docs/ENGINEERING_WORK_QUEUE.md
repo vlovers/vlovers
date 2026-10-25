@@ -1,3 +1,20 @@
+## Current integration decision snapshot — 2026-10-25
+
+This section supersedes the **current-state interpretations** in older dated notes below; historical SHA/CI evidence remains historical. GitHub comparisons were read live on 2026-10-25. No fresh exact-head CI results were obtained for this snapshot; do not promote earlier green checks to current-head guarantees.
+
+| Engineering PR | Target base → PR branch | Ahead / behind | Independent GitHub approval | Required next action |
+| --- | --- | --- | --- | --- |
+| [MutationBoundary #68](https://github.com/vlovers/mutation-boundary/pull/68) | `main` → `docs/ai-engineering-standard-v1` | 14 / 0 | None observed | Independent full-diff review, current-head CI, then authorized integration |
+| [RuleWitness #82](https://github.com/vlovers/rulewitness/pull/82) | `main` → `docs/ai-engineering-standard-v1` | 9 / 0 | None observed | Independent review and current-head CI |
+| [Estima #13](https://github.com/vlovers/estima/pull/13) | `develop` → `docs/ai-engineering-standard-v1` | 11 / 0 | None observed | Independent review and current-head CI; target is `develop`, not `main` |
+| [AI Office #43](https://github.com/vlovers/ai-office/pull/43) | `main` → `docs/ai-engineering-standard-v1` | 22 / 24 | None observed | Reconcile 24 main-only commits; verify delivery security invariants; rerun CI; independent review before #48/#49 |
+| [Portfolio #2](https://github.com/vlovers/vlovers/pull/2) | `main` → `docs/engineering-portfolio-dashboard` | 235 / 0 | None observed | Large-diff independent review, current-head CI, then authorized integration |
+| [Grid Atlas #272](https://github.com/vlovers/grid-atlas/pull/272) | `main` → `ci/pin-foundation-actions` | 18 / 20 | Not checked in this snapshot | Reconcile new main workflows and SHA pins, retain accessibility gate, rerun full CI |
+
+**Decision rule:** zero behind means no base-drift rebase is necessary *at this snapshot*, not that a PR is accepted. A green workflow, mergeability flag or AI-authored comment is not an independent `APPROVED` review. Do not merge without the required approval. Keep product-agent branches separate and never touch Frostline.
+
+---
+
 ### Current actionable CI handoffs — 2026-10-24
 
 - **Last Chapter [draft #5](https://github.com/vlovers/last-chapter/pull/5)**, exact head `5da99d29cf5e7a8edf08d71cc1f80ed462dfb56b`: **both CI and formatting failed**. Workflow runs `40121506764` (`quality / Format`) and `40121506755` (`normalize / Run npm run format`) both report Prettier parser error at `public/phaser-prototype/scene.js:207:25`, literal `\\n` sequences in the `onUpdate` JavaScript block. Agent handoff: [comment](https://github.com/vlovers/last-chapter/pull/5#issuecomment-6388030796). Fix source syntax in the product lane and recheck new exact head; no governance-side product edits.

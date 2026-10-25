@@ -7,6 +7,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -44,13 +45,21 @@ def validate_sha(value):
     return value
 
 
-def safe_markdown_cell(value):
-    """Fail closed on malformed metadata and escape Markdown table delimiters."""
+def validate_github_text(value):
+    """Validate GitHub metadata without altering its machine-readable value."""
     if not isinstance(value, str) or not value or len(value) > 255:
         raise ValueError("Invalid GitHub text metadata")
-    if any(ord(char) < 32 or ord(char) == 127 for char in value):
-        raise ValueError("Control character in GitHub metadata")
-    return value.replace(chr(92), chr(92) * 2).replace("|", chr(92) + "|")
+    if any(unicodedata.category(char) in {"Cc", "Cf", "Cs", "Zl", "Zp"} for char in value):
+        raise ValueError("Control or format character in GitHub metadata")
+    return value
+
+
+def safe_markdown_cell(value):
+    """Escape untrusted GitHub metadata as literal Markdown table text."""
+    escaped = validate_github_text(value).replace(chr(92), chr(92) * 2)
+    for char in "|[]()!<>`*_~":
+        escaped = escaped.replace(char, chr(92) + char)
+    return escaped
 
 
 FOLLOWUP_PRS = (
@@ -418,7 +427,7 @@ def build_snapshot():
             record["open_issues"] = count_open_items(repo, "issues", exclude_pull_requests=True)
             record["open_prs"] = count_open_items(repo, "pulls")
             try:
-                record["latest_release"] = safe_markdown_cell(
+                record["latest_release"] = validate_github_text(
                     request(f"/repos/{repo}/releases/latest")["tag_name"]
                 )
             except urllib.error.HTTPError as exc:

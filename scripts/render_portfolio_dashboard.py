@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import re
 import sys
 
 ATTENTION = {
@@ -113,6 +114,27 @@ def overlap_rows(prs):
 
 
 
+def safe_observation(value, label):
+    """Render only bounded plain-text GitHub observations in Markdown cells."""
+    if value is None:
+        return "unknown"
+    if (not isinstance(value, str) or not value or len(value) > 200
+            or any(ord(c) < 32 or ord(c) == 127 or c in "|<>\\`[]" for c in value)):
+        raise ValueError(f"Unsafe {label} observation")
+    return value
+
+
+def drift_cell(item):
+    """Show live target branch and compare result, never merge clearance."""
+    branch = item.get("base_branch")
+    drift = item.get("branch_divergence")
+    if branch is None and drift is None:
+        return "unknown"
+    if not isinstance(branch, str) or not re.fullmatch(r"[A-Za-z0-9_.-]+", branch):
+        raise ValueError("Invalid live base branch")
+    return f"{branch}: {safe_observation(drift, 'branch drift')}"
+
+
 def render(snapshot):
     if not isinstance(snapshot, dict) or snapshot.get("schema_version") != 1:
         raise ValueError("Unsupported snapshot schema")
@@ -135,8 +157,8 @@ def render(snapshot):
     lines = ["# Engineering portfolio dashboard", "",
              "Read-only GitHub observations. **Never merge or release based on this report.**", "",
              f"Repositories: {len(repos)} · Tracked PRs: {len(prs)} · Query errors: {len(errors)}", "",
-             "| PR | Attention | Days since last update | CI observation |",
-             "| --- | --- | ---: | --- |"]
+             "| PR | Attention | Days since last update | CI observation | Review observation | Mergeability | Live base drift |",
+             "| --- | --- | ---: | --- | --- | --- | --- |"]
     for item in prs:
         if not isinstance(item, dict):
             raise ValueError("Malformed PR record")
@@ -150,13 +172,12 @@ def render(snapshot):
         age = item.get("days_since_update")
         if age is not None and (type(age) is not int or age < 0):
             raise ValueError("Invalid inactivity age")
-        ci = item.get("workflow_observation")
-        if ci is not None and (not isinstance(ci, str) or len(ci) > 120 or any(
-            ord(c) < 32 or c in "|<>" for c in ci
-        )):
-            raise ValueError("Unsafe CI observation")
+        ci = safe_observation(item.get("workflow_observation"), "CI")
+        review = safe_observation(item.get("review_observation"), "review")
+        mergeability = safe_observation(item.get("mergeability_observation"), "mergeability")
+        drift = drift_cell(item)
         label = f"[{repo}#{number}](https://github.com/{repo}/pull/{number})"
-        lines.append(f"| {label} | {ATTENTION[attention]} | {age if age is not None else 'unknown'} | {ci or 'unknown'} |")
+        lines.append(f"| {label} | {ATTENTION[attention]} | {age if age is not None else 'unknown'} | {ci} | {review} | {mergeability} | {drift} |")
     lines.extend(["", "## Integration dependencies (advisory)", "",
                   "| PR | Dependency observation |", "| --- | --- |"])
     lines.extend(dependency_rows(prs))

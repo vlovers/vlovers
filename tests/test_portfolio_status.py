@@ -168,11 +168,14 @@ class PortfolioStatusTests(unittest.TestCase):
             if "/pulls/" in path:
                 return {"head": {"sha": sha}, "state": "open", "merged_at": None,
                         "updated_at": "2026-10-20T12:00:00Z",
-                        "user": {"login": "author"}, "mergeable": True}
+                        "user": {"login": "author"}, "mergeable": True,
+                        "base": {"ref": "main"}}
             if "/commits/main" in path:
                 return {"sha": sha}
             if "/releases/latest" in path:
                 return {"tag_name": "v1.0.0"}
+            if "/compare/" in path:
+                return {"status": "diverged", "ahead_by": 4, "behind_by": 2}
             if "/issues?" in path or "/pulls?" in path:
                 return []
             if path.startswith("/repos/"):
@@ -183,22 +186,61 @@ class PortfolioStatusTests(unittest.TestCase):
             snapshot = portfolio_status.build_snapshot()
         self.assertEqual(snapshot["schema_version"], 1)
         self.assertEqual(snapshot["errors"], [])
-        self.assertEqual(len(snapshot["repositories"]), 6)
+        self.assertEqual(len(snapshot["repositories"]), 7)
         self.assertEqual(len(snapshot["tracked_prs"]), 16)
         self.assertEqual(snapshot["repositories"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["head_sha"], sha)
         self.assertEqual(snapshot["tracked_prs"][0]["attention"], "review_needed")
+        self.assertEqual(snapshot["tracked_prs"][0]["base_branch"], "main")
+        self.assertEqual(snapshot["tracked_prs"][0]["branch_divergence"],
+                         "base-only 4; PR-only 2 (diverged)")
+        self.assertIn("vlovers/vlovers", {r["repository"] for r in snapshot["repositories"]})
         self.assertIsInstance(snapshot["tracked_prs"][0]["days_since_update"], int)
         self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
                          "1/1 observed success")
+
+    def test_json_snapshot_preserves_ci_when_compare_unavailable(self):
+        sha = "a" * 40
+
+        def fake_request(path):
+            if "/actions/runs?" in path:
+                return {"total_count": 1, "workflow_runs": [
+                    {"head_sha": sha, "status": "completed", "conclusion": "success"}]}
+            if "/reviews?" in path:
+                return []
+            if path.endswith("/pulls/43"):
+                return {"head": {"sha": sha}, "base": {"ref": "main"},
+                        "state": "open", "merged_at": None,
+                        "updated_at": "2026-10-20T12:00:00Z",
+                        "user": {"login": "author"}, "mergeable": True}
+            if "/compare/" in path:
+                raise TimeoutError("Live base comparison unavailable")
+            raise AssertionError(path)
+
+        with patch.object(portfolio_status, "REPOSITORIES", ()), \\
+             patch.object(portfolio_status, "FOUNDATION_PRS", (("ai-office", 43),)), \\
+             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \\
+             patch.object(portfolio_status, "request", side_effect=fake_request):
+            snapshot = portfolio_status.build_snapshot()
+        self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
+                         "1/1 observed success")
+        self.assertIsNone(snapshot["tracked_prs"][0]["branch_divergence"])
+        self.assertEqual(snapshot["errors"], [
+            {"target": "vlovers/ai-office#43:compare", "error_type": "TimeoutError"}])
+
+    def test_portfolio_inventory_includes_profile_and_preserves_existing_projects(self):
+        self.assertTrue({"grid-atlas", "ai-office", "rulewitness",
+                         "mutation-boundary", "estima", "vlovers",
+                         "last-chapter"}.issubset(set(portfolio_status.REPOSITORIES)))
+        self.assertNotIn("frostline", portfolio_status.REPOSITORIES)
 
     def test_json_snapshot_fail_closed_when_github_unavailable(self):
         with patch.object(portfolio_status, "request",
                           side_effect=__import__("urllib").error.URLError("offline")):
             snapshot = portfolio_status.build_snapshot()
-        self.assertEqual(len(snapshot["repositories"]), 6)
+        self.assertEqual(len(snapshot["repositories"]), 7)
         self.assertEqual(len(snapshot["tracked_prs"]), 16)
-        self.assertEqual(len(snapshot["errors"]), 22)
+        self.assertEqual(len(snapshot["errors"]), 23)
         self.assertIsNone(snapshot["repositories"][0]["head_sha"])
         self.assertIsNone(snapshot["tracked_prs"][0]["workflow_observation"])
 

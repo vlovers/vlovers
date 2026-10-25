@@ -217,9 +217,9 @@ class PortfolioStatusTests(unittest.TestCase):
                 raise TimeoutError("Live base comparison unavailable")
             raise AssertionError(path)
 
-        with patch.object(portfolio_status, "REPOSITORIES", ()), \\
-             patch.object(portfolio_status, "FOUNDATION_PRS", (("ai-office", 43),)), \\
-             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \\
+        with patch.object(portfolio_status, "REPOSITORIES", ()), \
+             patch.object(portfolio_status, "FOUNDATION_PRS", (("ai-office", 43),)), \
+             patch.object(portfolio_status, "FOLLOWUP_PRS", ()), \
              patch.object(portfolio_status, "request", side_effect=fake_request):
             snapshot = portfolio_status.build_snapshot()
         self.assertEqual(snapshot["tracked_prs"][0]["workflow_observation"],
